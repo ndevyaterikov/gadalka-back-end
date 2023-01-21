@@ -30,6 +30,7 @@ export class GatewayService {
         {
             console.log(`user join the room ${roomId} peerId ${peerId}`)
             rooms[roomId].push(peerId)
+            this.server.socketsJoin(roomId)
             this.server.to(roomId).emit('user-joined', {peerId})
             this.server.emit('get-users',{
                 roomId,
@@ -44,12 +45,14 @@ export class GatewayService {
 
     leaveRoom({roomId, peerId}:IRoomParams){
         if (rooms[roomId]) {
+            console.log('inside leaveRoom', peerId)
             rooms[roomId] = rooms[roomId].filter(id => id !== peerId)
             this.server.to(roomId).emit('user-disconnected', peerId)
         }
     }
 
     onUserDisconnect(client:Socket){
+        console.log('disconnected')
         if (this.peersVsSocketsMap[client.id]) {
             const {roomId, peerId} = this.peersVsSocketsMap[client.id]
             console.log(`Disconnected`, {roomId, peerId})
@@ -58,7 +61,7 @@ export class GatewayService {
     }
 
     onCreateRoom(){
-        const roomId = v4()
+        let roomId = v4()
         rooms[roomId] = []
         this.server.emit('room-created',{roomId})
         console.log(`user create the room ${roomId}`)

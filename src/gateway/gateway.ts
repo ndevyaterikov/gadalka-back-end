@@ -23,38 +23,25 @@ interface IRoomParams{
         origin: 'http://localhost:3001',
         methods: ['GET', 'POST'],
     },})
-
 export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     constructor(private readonly gateWayService: GatewayService) {}
-
 
 
     @WebSocketServer()
     server: Server
 
-
     onModuleInit(): any {
         this.server.on('connection', socket=> {
-            console.log('User connected')
-        })
+            console.log('User connected')})
         }
+
 
     handleDisconnect(@ConnectedSocket() client:Socket) {
         this.gateWayService.onUserDisconnect(client)
     }
 
-    @SubscribeMessage('newMessage')
-    onNewMessage(@MessageBody() body:any){
-        console.log(body)
-        this.server.emit('onMessage', {
-            msg: 'New message',
-            content: body
-        })
-    }
-
     @SubscribeMessage('join-room')
     onJoinRoom(@ConnectedSocket() client: Socket, @MessageBody(){roomId, peerId}:IRoomParams){
-
         this.gateWayService.onJoinRoom({roomId, peerId}, client)
     }
 
