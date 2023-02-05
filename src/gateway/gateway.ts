@@ -32,7 +32,10 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
 
     onModuleInit(): any {
         this.server.on('connection', socket=> {
-            console.log('User connected')})
+            console.log('User connected')
+
+
+        })
         }
 
 
