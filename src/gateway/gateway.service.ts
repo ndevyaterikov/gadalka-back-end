@@ -12,7 +12,7 @@ const rooms: Record<string, string[]>= {}
 
 @WebSocketGateway(3003,
     {  cors: {
-            origin: 'http://localhost:3001',
+            origin: 'http://localhost:3000',
             methods: ['GET', 'POST'],
         },})
 

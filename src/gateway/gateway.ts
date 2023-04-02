@@ -20,7 +20,7 @@ interface IRoomParams{
 
 @WebSocketGateway(3003,
     {  cors: {
-        origin: 'http://localhost:3001',
+        origin: 'http://localhost:3000',
         methods: ['GET', 'POST'],
     },})
 export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
