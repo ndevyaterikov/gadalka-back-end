@@ -8,8 +8,15 @@ import {
 } from "@nestjs/websockets";
 
 import {Server, Socket} from "socket.io";
-import {OnModuleInit} from "@nestjs/common";
+import {OnModuleInit, Req, UseGuards} from "@nestjs/common";
 import {GatewayService} from "./gateway.service";
+import {WsAtStrategy} from "../auth/strategies/ws-at.strategy";
+import {GetCurrentUserId} from "../auth/common/decorators/get-current-user-id.decorator";
+import {WsGetCurrentUserId} from "../auth/common/decorators/ws-get-current-user-id.decorator";
+import {Public} from "../auth/common/decorators/public.decorator";
+import {WsAtGuard} from "../auth/common/guards/ws-at.guard";
+import {RtGuard} from "../auth/common/guards/rt.guard";
+import {use} from "passport";
 
 
 interface IRoomParams{
@@ -30,11 +37,11 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     @WebSocketServer()
     server: Server
 
+
+
     onModuleInit(): any {
         this.server.on('connection', socket=> {
-            console.log('User connected')
-
-
+            socket.emit('connected')
         })
         }
 
@@ -44,13 +51,23 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     }
 
     @SubscribeMessage('join-room')
-    onJoinRoom(@ConnectedSocket() client: Socket, @MessageBody(){roomId, peerId}:IRoomParams){
+    onJoinRoom(
+        @ConnectedSocket() client: Socket,
+        @MessageBody(){roomId, peerId}:IRoomParams){
         this.gateWayService.onJoinRoom({roomId, peerId}, client)
     }
 
-    @SubscribeMessage('create-room')
-    onCreateRoom(){
-        this.gateWayService.onCreateRoom()
+   // @Public()
+    @UseGuards(WsAtGuard)
+    @SubscribeMessage('sendMessage')
+    onSendMessage(
+       @WsGetCurrentUserId() userId:number,
+       @Req() request
+    ){
+
+        console.log(request)
+
+        this.gateWayService.onSendMessage(userId)
     }
 
 }

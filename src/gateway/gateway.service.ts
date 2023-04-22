@@ -60,10 +60,10 @@ export class GatewayService {
         }
     }
 
-    onCreateRoom(){
+    onSendMessage(userId:number){
         let roomId = v4()
         rooms[roomId] = []
-        this.server.emit('room-created',{roomId})
+        this.server.emit('room-created',{userId})
         console.log(`user create the room ${roomId}`)
     }
 

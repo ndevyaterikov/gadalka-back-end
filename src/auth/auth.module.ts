@@ -8,12 +8,15 @@ import {RtStrategy} from "./strategies/rt.strategy";
 import {JwtModule} from "@nestjs/jwt";
 import {User} from "../users/user.model";
 import {UsersModule} from "../users/users.module";
+import {WitchModule} from "../witch/witch.module";
 
 @Module({
   controllers: [AuthController],
   providers: [AuthService, AtStrategy, RtStrategy],
-  imports:[forwardRef(()=>UsersModule),
-    SequelizeModule.forFeature([User777, User]),
+  imports:[
+      forwardRef(()=>UsersModule),
+      forwardRef(()=>WitchModule),
+      SequelizeModule.forFeature([User]),
       JwtModule.register({})
   ],
 })

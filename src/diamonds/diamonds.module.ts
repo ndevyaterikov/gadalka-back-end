@@ -8,10 +8,12 @@ import {Role} from "../roles/roles.model";
 import {UserRole} from "../roles/user-roles.model";
 import {Diamonds} from "./diamonds.model";
 import { DiamondsController } from './diamonds.controller';
+import {CoinsModule} from "../coins/coins.module";
 
 @Module({
   providers: [DiamondsService],
   imports:[
+      CoinsModule,
     SequelizeModule.forFeature([User, Diamonds]),
   ],
   controllers: [DiamondsController]

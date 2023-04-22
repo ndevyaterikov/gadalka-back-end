@@ -1,13 +1,17 @@
-import {BelongsToMany, Column, DataType, HasMany, Model, Table} from "sequelize-typescript";
+import {BelongsToMany, Column, DataType, HasMany, HasOne, Model, Table} from "sequelize-typescript";
 import {ApiProperty} from "@nestjs/swagger";
 import {Role} from "../roles/roles.model";
 import {UserRole} from "../roles/user-roles.model";
 import {Post} from "../posts/posts.model";
 import {Diamonds} from "../diamonds/diamonds.model";
+import {Witch} from "../witch/witch.model";
+import {Message} from "../messages/messages.model";
+import {UserMessages} from "../messages/user-messages.model";
 
 interface UserCreationAttrs{
     email: string,
-    password: string
+    password: string,
+    userName: string
 }
 
 @Table({tableName:'users'})
@@ -48,10 +52,15 @@ export class User extends Model<User, UserCreationAttrs> {
     @BelongsToMany(()=>Role, ()=>UserRole)
     roles: Role[]
 
+    @HasMany(()=>Message)
+    messages: Message[]
+
     @HasMany(()=>Post)
     posts: Post[]
 
     @HasMany(()=>Diamonds)
     diamonds: Diamonds[]
 
+    @HasOne(()=>Witch)
+    witch: Witch[]
 }

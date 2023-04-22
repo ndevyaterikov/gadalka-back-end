@@ -11,6 +11,7 @@ import {DiamondsTransactionDto} from "./dto/diamonds-transaction-dto";
 import {Diamonds} from "./diamonds.model";
 import {NUMBER} from "sequelize";
 import {DiamondHistoryDto} from "./dto/diamond-history-dto";
+import {DiamonExchangeDto} from "./dto/diamon-exchange-dto";
 
 @Controller('diamonds')
 export class DiamondsController {
@@ -22,12 +23,25 @@ export class DiamondsController {
     @ApiResponse({status:200, type:Diamonds})
     @UsePipes(ValidationPipe)
     @Post('/transaction')
-    changeName(
+    transactionDiamonds(
         @Body() incoming_dto: IncomingDiamondsDto,
         @GetCurrentUserId() userId: number
     ){
         const dto = new DiamondsTransactionDto(userId, incoming_dto.transaction, incoming_dto.cause)
         return this.diamondsService.transaction(dto)
+    }
+
+
+    @ApiOperation({summary:'Обмен алмазов на монеты'})
+    @ApiResponse({status:200})
+    @UsePipes(ValidationPipe)
+    @Post('/exchangeDiamonds')
+    exchangeDiamonds(
+        @Body() incoming_dto: DiamonExchangeDto,
+        @GetCurrentUserId() userId: number
+    ){
+        const dto = new DiamondsTransactionDto(userId, incoming_dto.transaction, incoming_dto.cause)
+        return this.diamondsService.exchangeDiamonds(dto)
     }
 
 
@@ -44,13 +58,24 @@ export class DiamondsController {
 
 
     @ApiOperation({summary:'Количество транзакций'})
-    @ApiResponse({status:200, type:NUMBER})
+    @ApiResponse({status:200})
     @UsePipes(ValidationPipe)
     @Get('/get_diamonds_transacions_count')
     getDiamondsTransactionsCount(
         @GetCurrentUserId() userId: number
     ){
         return this.diamondsService.getDiamondsTransactionsCount(userId)
+    }
+
+
+    @ApiOperation({summary:'Алмазов на счету'})
+    @ApiResponse({status:200})
+    @UsePipes(ValidationPipe)
+    @Get('/get_diamonds_count')
+    getCoinsCount(
+        @GetCurrentUserId() userId: number
+    ){
+        return this.diamondsService.getDiamondsCount(userId)
     }
 
 }

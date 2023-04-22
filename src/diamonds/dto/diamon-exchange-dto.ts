@@ -1,11 +1,12 @@
 import {ApiProperty} from "@nestjs/swagger";
-import {IsDivisibleBy, IsEmail, IsNumber, IsString, Length} from "class-validator";
+import {IsDivisibleBy, IsEmail, IsNumber, IsString, Length, Min} from "class-validator";
 
-export class IncomingDiamondsDto {
+export class DiamonExchangeDto {
 
     @ApiProperty({example:'1', description:'транзакция'})
     @IsNumber()
-    @IsDivisibleBy(10)
+    @Min(1,{message:'Число алмазов не должно отрицательным'})
+    @IsDivisibleBy(10, {message:'Число алмазов должно быть кратным 10'})
     readonly transaction:number
 
     @ApiProperty({example:'Подтверждение емейла или обмен на монеты', description:'Причина пранзакции алмазов'})

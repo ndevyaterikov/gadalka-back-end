@@ -12,12 +12,14 @@ import ReturnUserDto from "./dto/return-user-dto";
 import {ChangeAvatarDto} from "./dto/change-avatra-dto/change-avatar-dto";
 import ReturnChangeAvatarDto from "./dto/change-avatra-dto/return-change-avatar-dto";
 import {ChangePasswordDto} from "./dto/change-password-dto/change-password-dto";
+import {Witch} from "../witch/witch.model";
 
 @Injectable()
 export class UsersService {
 
     constructor(
         @InjectModel(User) private userRepository: typeof User,
+        @InjectModel(Witch) private witchRepository: typeof Witch,
         private roleServive: RolesService
     ) {
     }
@@ -147,6 +149,16 @@ export class UsersService {
         if(!user){
             throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND)
         }
+
+        let checkRole:boolean = false
+        user.roles.map(e=> {
+            if (e.value==='WITCH'){
+                checkRole = true
+            }
+        })
+        if (checkRole){
+            await this.witchRepository.destroy({where:{userId:user.id}})
+        }
         await this.userRepository.destroy({where:{id:userId}})
         return HttpStatus.ACCEPTED
     }
@@ -158,4 +170,6 @@ export class UsersService {
         }
         return user.diamonds
     }
+
+
 }

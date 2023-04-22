@@ -13,6 +13,7 @@ import {RtGuard} from "./common/guards/rt.guard";
 import {GetCurrentUserId} from "./common/decorators/get-current-user-id.decorator";
 import {GetRT} from "./common/decorators/get-rt.decorator";
 import {Public} from "./common/decorators/public.decorator";
+import {CreateWitchDto} from "../witch/dto/create-witch-dto";
 
 
 @Controller('auth')
@@ -21,7 +22,7 @@ export class AuthController {
     constructor(private authService: AuthService) {
     }
 
-    @ApiOperation({summary:'Создание пользователя 777'})
+    @ApiOperation({summary:'Создание пользователя'})
     @ApiResponse({status:200, type:User})
     @Public()
     @Post('/local/singup')
@@ -73,6 +74,19 @@ export class AuthController {
     )
     {
         return this.authService.refreshTokens(userId, refreshToken.toString(), response)
+    }
+
+
+    @ApiOperation({summary:'Создание гадалки'})
+    @ApiResponse({status:200, type:User})
+    @Public()
+    @Post('/local/singupWitch')
+    @HttpCode(HttpStatus.CREATED)
+    singupWitch(
+        @Body() dto:CreateWitchDto,
+        @Res({ passthrough: true }) response
+    ):Promise<Tokens>{
+        return this.authService.singupWitch(dto, response)
     }
 
 }

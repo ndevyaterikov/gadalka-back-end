@@ -9,15 +9,20 @@ import {RolesModule} from "../roles/roles.module";
 import {Auth1Module} from "../auth1/auth1.module";
 import {Post} from "../posts/posts.model";
 import {AuthModule} from "../auth/auth.module";
+import {Witch} from "../witch/witch.model";
+import {MessagesService} from "../messages/messages.service";
+import {MessagesModule} from "../messages/messages.module";
+import {Message} from "../messages/messages.model";
 
 @Module({
   controllers: [UsersController],
   providers: [UsersService],
   imports:[
       RolesModule,
-      SequelizeModule.forFeature([User, Role, UserRole, Post]),
+      SequelizeModule.forFeature([User, Role, UserRole, Post, Witch, Message]),
       forwardRef(()=>Auth1Module),
       forwardRef(()=>AuthModule),
+      forwardRef(()=>MessagesModule),
 
   ],
   exports:[UsersService, ]

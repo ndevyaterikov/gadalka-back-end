@@ -19,6 +19,13 @@ import {APP_GUARD} from "@nestjs/core";
 import {AtGuard} from "./auth/common/guards/at.guard";
 import { DiamondsModule } from './diamonds/diamonds.module';
 import {Diamonds} from "./diamonds/diamonds.model";
+import { CoinsModule } from './coins/coins.module';
+import {Coins} from "./coins/coins.model";
+import { WitchModule } from './witch/witch.module';
+import {Witch} from "./witch/witch.model";
+import { MessagesModule } from './messages/messages.module';
+import {Message} from "./messages/messages.model";
+import {UserMessages} from "./messages/user-messages.model";
 
 @Module({
   imports: [
@@ -29,17 +36,19 @@ import {Diamonds} from "./diamonds/diamonds.model";
       UsersModule,
       AuthModule,
       RolesModule,
-    SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: process.env.POSTGRES_HOST,
-      port: Number(process.env.POSTGRES_PORT),
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
-      models: [User777, User, Role, UserRole, Post, Diamonds],
-      autoLoadModels:true,
-      synchronize: true,
-    }),
+        SequelizeModule.forRoot({
+          dialect: 'postgres',
+          host: process.env.POSTGRES_HOST,
+          port: Number(process.env.POSTGRES_PORT),
+          username: process.env.POSTGRES_USER,
+          password: process.env.POSTGRES_PASSWORD,
+          database: process.env.POSTGRES_DB,
+          models: [User777, User, Role,
+              UserRole, Post, Diamonds,
+              Coins, Witch, Message],
+          autoLoadModels:true,
+          synchronize: true,
+        }),
       ServeStaticModule.forRoot({
           rootPath: path.resolve(__dirname,'static'),
       }),
@@ -48,7 +57,9 @@ import {Diamonds} from "./diamonds/diamonds.model";
     FilesModule,
     AuthModule,
     DiamondsModule,
-
+    CoinsModule,
+    WitchModule,
+    MessagesModule,
   ],
   controllers: [],
   providers: [

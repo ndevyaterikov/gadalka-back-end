@@ -8,8 +8,6 @@ import {AddRoleDto} from "./dto/add-role.dto";
 import {BanUserDto} from "./dto/ban-user.dto";
 import {ValidationPipe} from "../pipes/validation.pipe";
 import {RolesGuard} from "../auth/common/guards/roles.guard";
-import {Roles1Guard} from "../auth1/roles1.guard";
-import {Public} from "../auth/common/decorators/public.decorator";
 import {ChangeUserNameDto} from "./dto/change-user-name-dto";
 import {GetCurrentUserId} from "../auth/common/decorators/get-current-user-id.decorator";
 import ReturnChangeAvatarDto from "./dto/change-avatra-dto/return-change-avatar-dto";

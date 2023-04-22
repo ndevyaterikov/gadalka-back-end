@@ -9,15 +9,16 @@ import UserDto from "./dto/user-dto";
 import {User} from "../users/user.model";
 import {UsersService} from "../users/users.service";
 import * as bcrypt from 'bcrypt'
+import {CreateWitchDto} from "../witch/dto/create-witch-dto";
+import {WitchService} from "../witch/witch.service";
 
 
 
 @Injectable()
 export class AuthService {
     constructor(
-
-                //private userRepository: typeof User,
                 private userService: UsersService,
+                private witchService: WitchService,
                 private jwtService: JwtService) {
     }
 
@@ -58,9 +59,8 @@ export class AuthService {
     async singupLocal(dto:CreateUserDto, response):Promise<ReturnObj> {
         const candidate = await this.userService.getUserByEmail(dto.email)
         if (candidate){
-            throw new HttpException('Пользователь с таким  email существует', HttpStatus.BAD_REQUEST)
+            throw new HttpException('Пользователь с таким  email уже существует', HttpStatus.BAD_REQUEST)
         }
-
         const hash = await this.userService.hashData(dto.password)
         const user = await this.userService.CreateUser({...dto, password:hash})
 
@@ -116,5 +116,27 @@ export class AuthService {
 
         const userDTO = new UserDto(user)
         return {...tokens, userDTO}
+    }
+
+    async singupWitch(dto: CreateWitchDto, response) {
+
+        const candidate = await this.userService.getUserByEmail(dto.email)
+        if (candidate){
+            throw new HttpException('Пользователь с таким  email уже существует', HttpStatus.BAD_REQUEST)
+        }
+
+        const candidate1 = await this.userService.getUserByName(dto.userName)
+        if (candidate1){
+            throw new HttpException('Пользователь с таким  именем уже существует', HttpStatus.BAD_REQUEST)
+        }
+
+        const hash = await this.userService.hashData(dto.password)
+        const witch = await this.witchService.CreateWitch({...dto, password:hash})
+        const tokens = await this.getTokens(witch)
+        await this.updateRtHash(witch.id,tokens.refresh_token)
+        const userDTO = new UserDto(witch)
+        response.cookie('jwt-RT', tokens.refresh_token, {httpOnly:true})
+        return {...tokens, userDTO}
+
     }
 }

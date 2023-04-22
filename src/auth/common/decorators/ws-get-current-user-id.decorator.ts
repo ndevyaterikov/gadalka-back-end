@@ -1,9 +1,9 @@
 import {createParamDecorator, ExecutionContext} from "@nestjs/common";
 
-export const GetCurrentUserId = createParamDecorator(
-
+export const WsGetCurrentUserId = createParamDecorator(
     (data:string|undefined, context: ExecutionContext):number=>{
-    const request =context.switchToHttp().getRequest()
-       // console.log(request)
+        console.log('claclacla1')
+    const request =context.switchToWs().getClient().handshake
+
     return  request.user['sub']
 })
