@@ -1,7 +1,13 @@
-import {Injectable} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {WebSocketGateway, WebSocketServer} from "@nestjs/websockets";
 import {Server, Socket} from "socket.io";
 import {v4} from 'uuid'
+import {InjectModel} from "@nestjs/sequelize";
+import {User} from "../users/user.model";
+import {Message} from "../messages/messages.model";
+import {UsersService} from "../users/users.service";
+import {TypeOfMessageInChat} from "../messages/dto/messages-type";
+import {MessagesService} from "../messages/messages.service";
 
 interface IRoomParams{
     roomId:string,
@@ -18,8 +24,16 @@ const rooms: Record<string, string[]>= {}
 
 @Injectable()
 export class GatewayService {
-    peersVsSocketsMap: Map<string, IRoomParams> = new Map()
 
+    constructor(
+        @InjectModel(User) private userRepository: typeof User,
+        @InjectModel(Message) private messageRepository: typeof Message,
+        private userService: UsersService,
+        private messagesService: MessagesService
+    ) {
+    }
+
+    peersVsSocketsMap: Map<string, IRoomParams> = new Map()
     @WebSocketServer()
     server: Server
 
@@ -60,11 +74,43 @@ export class GatewayService {
         }
     }
 
-    onSendMessage(userId:number){
-        let roomId = v4()
-        rooms[roomId] = []
-        this.server.emit('room-created',{userId})
-        console.log(`user create the room ${roomId}`)
+    async onSendMessage(param: {
+        readonly witchId: number;
+        readonly message: string;
+        readonly type: string;
+        readonly authorPicId: number;
+        readonly authorName:string;
+        userId: number })
+    {
+        await this.messagesService.createMessage(param)
+        this.server.emit('MessageCreated')
     }
 
+    async onWitchChat(witchId: number) {
+        const witch = await this.userRepository.findByPk(witchId,{include:Message})
+
+        const resArr:{
+            messageId:number,
+            text:string,
+            user:string,
+            userpic:number,
+            messageType:TypeOfMessageInChat
+        }[] = []
+
+
+        if (witch){
+            witch.messages.map(r=>resArr.push({
+                messageId:r.id,
+                text:r.message,
+                user:r.authorName,
+                userpic:r.authorPicId,
+                messageType:TypeOfMessageInChat.general
+            }))
+
+            this.server.emit('SendingWitchChat',{resArr})
+        }
+        this.server.emit('error','chat not found')
+
+
+    }
 }

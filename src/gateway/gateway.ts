@@ -8,7 +8,7 @@ import {
 } from "@nestjs/websockets";
 
 import {Server, Socket} from "socket.io";
-import {OnModuleInit, Req, UseGuards} from "@nestjs/common";
+import {OnModuleInit, Req, UseFilters, UseGuards, UsePipes} from "@nestjs/common";
 import {GatewayService} from "./gateway.service";
 import {WsAtStrategy} from "../auth/strategies/ws-at.strategy";
 import {GetCurrentUserId} from "../auth/common/decorators/get-current-user-id.decorator";
@@ -17,6 +17,12 @@ import {Public} from "../auth/common/decorators/public.decorator";
 import {WsAtGuard} from "../auth/common/guards/ws-at.guard";
 import {RtGuard} from "../auth/common/guards/rt.guard";
 import {use} from "passport";
+import {AllWSExceptionsFilter} from "../exceptions/ws.exeption";
+import {ValidationPipe} from "../pipes/validation.pipe";
+import {CreateMessageDto} from "../messages/dto/create-message-dto";
+import {WsValidationPipe} from "../pipes/ws-validation.pipe";
+
+import {GetChatDto} from "../messages/dto/get-chat-dto";
 
 
 interface IRoomParams{
@@ -25,11 +31,14 @@ interface IRoomParams{
 }
 
 
+
+
 @WebSocketGateway(3003,
     {  cors: {
         origin: 'http://localhost:3000',
         methods: ['GET', 'POST'],
     },})
+
 export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     constructor(private readonly gateWayService: GatewayService) {}
 
@@ -38,13 +47,16 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     server: Server
 
 
-
-    onModuleInit(): any {
+    onModuleInit() {
         this.server.on('connection', socket=> {
             socket.emit('connected')
         })
         }
 
+    handleConnection(@ConnectedSocket() client: Socket) {
+        client.emit('authCheck')
+        console.log('authCheck authCheck authCheck authCheck authCheck authCheck authCheck')
+    }
 
     handleDisconnect(@ConnectedSocket() client:Socket) {
         this.gateWayService.onUserDisconnect(client)
@@ -58,16 +70,27 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     }
 
    // @Public()
+
     @UseGuards(WsAtGuard)
+    @UsePipes(WsValidationPipe)
     @SubscribeMessage('sendMessage')
+    @UseFilters(new AllWSExceptionsFilter())
     onSendMessage(
        @WsGetCurrentUserId() userId:number,
-       @Req() request
+       @MessageBody() data:CreateMessageDto,
     ){
-
-        console.log(request)
-
-        this.gateWayService.onSendMessage(userId)
+        this.gateWayService.onSendMessage({...data,userId:userId})
     }
+
+
+
+    @UsePipes(WsValidationPipe)
+    @SubscribeMessage('witchChat')
+    onWitchChat(
+        @MessageBody() {witchId}:GetChatDto,
+    ){
+        this.gateWayService.onWitchChat(witchId)
+    }
+
 
 }

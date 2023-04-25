@@ -14,6 +14,7 @@ export class WsAtStrategy extends PassportStrategy(Strategy, 'jwt-ws'){
     }
 
     validate(payload: any){
+
         return payload
     }
 }

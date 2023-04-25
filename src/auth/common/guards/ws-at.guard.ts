@@ -1,11 +1,7 @@
 import {AuthGuard} from "@nestjs/passport";
 import {Reflector} from "@nestjs/core";
-import {CanActivate, ExecutionContext, Injectable, Logger} from "@nestjs/common";
-import {AuthService} from "../../auth.service";
-import {Socket} from "socket.io";
+import { ExecutionContext, HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {WsException} from "@nestjs/websockets";
-import {Observable} from "rxjs";
-import jwt_decode from "jwt-decode"
 
 @Injectable()
 export class WsAtGuard extends AuthGuard('jwt-ws'){
@@ -18,11 +14,13 @@ export class WsAtGuard extends AuthGuard('jwt-ws'){
     }
 
     canActivate(context:ExecutionContext) {
+
         const isPublic = this.reflector.getAllAndOverride('isPublic', [
             context.getHandler(),
             context.getClass()
         ])
         if (isPublic) return true
+
 
         return super.canActivate(context)
     }
