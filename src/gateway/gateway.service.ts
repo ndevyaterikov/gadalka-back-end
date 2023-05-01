@@ -1,26 +1,20 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
+import {Injectable} from '@nestjs/common';
 import {WebSocketGateway, WebSocketServer} from "@nestjs/websockets";
 import {Server, Socket} from "socket.io";
-import {v4} from 'uuid'
 import {InjectModel} from "@nestjs/sequelize";
 import {User} from "../users/user.model";
 import {Message} from "../messages/messages.model";
 import {UsersService} from "../users/users.service";
 import {TypeOfMessageInChat} from "../messages/dto/messages-type";
 import {MessagesService} from "../messages/messages.service";
+import {CoinsService} from "../coins/coins.service";
+import {v4} from "uuid"
 
 interface IRoomParams{
     roomId:string,
     peerId:string
 }
 
-const rooms: Record<string, string[]>= {}
-
-@WebSocketGateway(3003,
-    {  cors: {
-            origin: 'http://localhost:3000',
-            methods: ['GET', 'POST'],
-        },})
 
 @Injectable()
 export class GatewayService {
@@ -29,50 +23,61 @@ export class GatewayService {
         @InjectModel(User) private userRepository: typeof User,
         @InjectModel(Message) private messageRepository: typeof Message,
         private userService: UsersService,
-        private messagesService: MessagesService
+        private messagesService: MessagesService,
+        private coinsService: CoinsService
     ) {
     }
 
-    peersVsSocketsMap: Map<string, IRoomParams> = new Map()
-    @WebSocketServer()
-    server: Server
+    webSockets = []
 
-    onJoinRoom({roomId, peerId}:IRoomParams, client:Socket){
-        console.log('socket connected', client.id)
-        this.peersVsSocketsMap[client.id] = {roomId, peerId}
-        if (rooms[roomId])
-        {
-            console.log(`user join the room ${roomId} peerId ${peerId}`)
-            rooms[roomId].push(peerId)
-            this.server.socketsJoin(roomId)
-            this.server.to(roomId).emit('user-joined', {peerId})
-            this.server.emit('get-users',{
-                roomId,
-                participants:rooms[roomId]}
-            )
-            console.log(`participants ${rooms[roomId]}`)
+    onJoinRoom(dto:{witchId:string, userId:string}, client:Socket, server: Server){
+
+            const clientId = v4()
+            if (typeof dto.userId==='undefined'){dto.userId="guest"}
+            client.join(String(dto.witchId))
+            this.webSockets.push({roomId:dto.witchId, userId:dto.userId, socket: client, clientId: clientId})
+            let viewers:number = 0
+            this.webSockets.forEach(w=>{
+                if(w.roomId = dto.witchId){viewers++}
+            })
+
+            server.to(String(dto.witchId)).emit(
+                'user-joined-room',
+                {
+                    witchId:dto.witchId,
+                    userId:dto.userId,
+                    clientId: clientId,
+                    viewers: viewers
+                })
+
+            client.emit('RequestOfChatIndividual',{witchId:dto.witchId, userId:dto.userId})
+        }
+
+
+
+
+    onUserDisconnect(client:Socket, server:Server){
+
+        const socketLeft =this.webSockets.filter(w=>w.socket===client)[0]
+        this.webSockets = this.webSockets.filter(w=>w.socket!==client)
+        let viewers:number = 0
+        if (socketLeft){
+        this.webSockets.forEach(w=>{
+            if(w.roomId = socketLeft.roomId){viewers++}
+        })
+
+
+        server.to(String(socketLeft.roomId)).emit('user-left-the-room',
+            {
+                witchId:socketLeft.roomId,
+                userId:socketLeft.userId,
+                clientId: socketLeft.clientId,
+                viewers:viewers
+            })}
 
 
         }
 
-    }
-
-    leaveRoom({roomId, peerId}:IRoomParams){
-        if (rooms[roomId]) {
-            console.log('inside leaveRoom', peerId)
-            rooms[roomId] = rooms[roomId].filter(id => id !== peerId)
-            this.server.to(roomId).emit('user-disconnected', peerId)
-        }
-    }
-
-    onUserDisconnect(client:Socket){
-        console.log('disconnected')
-        if (this.peersVsSocketsMap[client.id]) {
-            const {roomId, peerId} = this.peersVsSocketsMap[client.id]
-            console.log(`Disconnected`, {roomId, peerId})
-            this.leaveRoom({roomId, peerId})
-        }
-    }
 
     async onSendMessage(param: {
         readonly witchId: number;
@@ -80,14 +85,46 @@ export class GatewayService {
         readonly type: string;
         readonly authorPicId: number;
         readonly authorName:string;
-        userId: number })
+        userId: number,
+        server: Server,
+        client: Socket
+    })
     {
-        await this.messagesService.createMessage(param)
-        this.server.emit('MessageCreated')
+            try {
+                const user = await this.userService.getUserById(param.userId)
+                if (user)
+                {
+                    await this.messagesService.createMessage(
+                        {
+                            witchId:param.witchId,
+                            authorName:user.userName,
+                            userId:user.id,
+                            authorPicId:user.accountPicNumber,
+                            type:'general',
+                            message: param.message
+                        })
+                    this.onWitchChat(param.witchId, param.server, param.client)
+                    param.client.emit('MessageCreated')
+                }else
+                    param.client.emit('error','user not found')
+
+            }catch (e){
+                param.client.emit('exception', 'ошибка отправки сообщения')
+
+            }
+
     }
 
-    async onWitchChat(witchId: number) {
-        const witch = await this.userRepository.findByPk(witchId,{include:Message})
+    async onWitchChat(witchId: number, server:Server, client: Socket) {
+        try {
+        const witch = await this.userRepository.findByPk(witchId,
+            {
+                include: [{
+                    model: Message,
+                    limit:20,
+                    order: [['createdAt', 'DESC']]
+                }]
+            })
 
         const resArr:{
             messageId:number,
@@ -97,20 +134,240 @@ export class GatewayService {
             messageType:TypeOfMessageInChat
         }[] = []
 
-
         if (witch){
-            witch.messages.map(r=>resArr.push({
+            witch.messages.map(r=>
+                {
+                let mess: string
+                let type:TypeOfMessageInChat
+                    switch(r.type) {
+                        case 'general':
+                            type=TypeOfMessageInChat.general
+                            mess=r.message
+                            break
+                        case 'CoinsGift':
+                            type=TypeOfMessageInChat.coinsGift
+                            mess = r.message
+                            break
+                        case 'paidButNotPrivate':
+                            type=TypeOfMessageInChat.paidButNotPrivate
+                            mess = 'Запрос на гадание от '+ r.authorName
+                            break
+                        case 'private':
+                            type=TypeOfMessageInChat.private
+                            mess = 'Запрос на индивидуальное гадание от '+ r.authorName
+                            break
+                        default:
+                            type=TypeOfMessageInChat.general
+                    }
+                resArr.push({
                 messageId:r.id,
-                text:r.message,
+                text:mess,
                 user:r.authorName,
                 userpic:r.authorPicId,
-                messageType:TypeOfMessageInChat.general
-            }))
-
-            this.server.emit('SendingWitchChat',{resArr})
+                messageType:type})}
+            )
+              server.to(String(witchId)).emit('SendingWitchChat',{resArr})
+        }else {
+            client.emit('error','chat not found')
         }
-        this.server.emit('error','chat not found')
+
+        }catch (e) {
+            client.emit('error','chat error')
+        }
+
+    }
+
+    async onWitchChatIndividual(witchId: number, server:Server, client:Socket) {
+        try {
+            const witch = await this.userRepository.findByPk(witchId,
+                {
+                    include: [{
+                        model: Message,
+                        limit:20,
+                        order: [['createdAt', 'DESC']]
+                    }]
+                })
+
+            const resArr:{
+                messageId:number,
+                text:string,
+                user:string,
+                userpic:number,
+                messageType:TypeOfMessageInChat
+            }[] = []
+
+            if (witch){
+                witch.messages.map(r=>
+                    {
+                        let mess: string
+                        let type:TypeOfMessageInChat
+                        switch(r.type) {
+                            case 'general':
+                                type=TypeOfMessageInChat.general
+                                mess=r.message
+                                break
+                            case 'CoinsGift':
+                                type=TypeOfMessageInChat.coinsGift
+                                mess = r.message
+                                break
+                            case 'paidButNotPrivate':
+                                type=TypeOfMessageInChat.paidButNotPrivate
+                                mess = 'Запрос на гадание от '+ r.authorName
+                                break
+                            case 'private':
+                                type=TypeOfMessageInChat.private
+                                mess = 'Запрос на индивидуальное гадание от '+ r.authorName
+                                break
+                            default:
+                                type=TypeOfMessageInChat.general
+                        }
+                        resArr.push({
+                            messageId:r.id,
+                            text:mess,
+                            user:r.authorName,
+                            userpic:r.authorPicId,
+                            messageType:type})}
+                )
+                client.emit('SendingWitchChat',{resArr})
+            }else {
+                client.emit('error','chat not found')
+            }
+
+        }catch (e) {
+            client.emit('error','chat error')
+        }
+
+    }
+
+    async onSendCoins(param: { readonly witchId: number; userId: number; readonly transaction: number, server: Server, client: Socket}) {
+        const witch = await this.userService.getUserById(param.witchId)
+
+        if(witch){
+            try {
+                const giftTransaction = await this.coinsService.transaction({userId:param.userId, transaction:-param.transaction, cause:'Gift to:'+ witch.userName})
+                const user = await this.userService.getUserById(param.userId)
+                if (giftTransaction&&user)
+                {
+                    const recivedtransaction = await this.coinsService.transaction({userId:param.witchId, transaction:param.transaction, cause:'Gift from: '+user.userName})
+                    if (!recivedtransaction)await this.coinsService.transaction({userId:param.userId, transaction:-param.transaction, cause:'Returned'})
+
+                    await this.messagesService.createMessage(
+                        {
+                            witchId:param.witchId,
+                            authorName:user.userName,
+                            userId:user.id,
+                            authorPicId:user.accountPicNumber,
+                            type:'CoinsGift',
+                            message: 'Подарок '+ param.transaction + ' монет, от ' + user.userName
+                        })
+                    this.onWitchChat(param.witchId, param.server, param.client)
+
+                }else
+                    param.client.emit('error','transaction failed')
+
+            }catch (e){
+                param.client.emit('exception', 'недостаточно монет')
+
+            }
 
 
+    }
+    }
+
+    async onSendMessagePaidButNotPrivate(param:
+                                             {
+                                                 readonly witchId: number;
+                                                 readonly authorPicId: number;
+                                                 readonly authorName: string;
+                                                 readonly message: string;
+                                                 readonly type: string;
+                                                 userId: number;
+                                                 server: Server,
+                                                 client: Socket
+                                             }) {
+        const witch = await this.userService.getUserById(param.witchId)
+
+        if(witch){
+            try {
+                const giftTransaction = await this.coinsService.transaction({userId:param.userId, transaction:-50, cause:'Гадание у:'+ witch.userName})
+                const user = await this.userService.getUserById(param.userId)
+                if (giftTransaction&&user)
+                {
+                    const recivedtransaction = await this.coinsService.transaction({userId:param.witchId, transaction:50, cause:'Оплата за гадание '+user.userName})
+                    if (!recivedtransaction)await this.coinsService.transaction({userId:param.userId, transaction:-50, cause:'Returned'})
+
+                    await this.messagesService.createMessage(
+                        {
+                            witchId:param.witchId,
+                            authorName:user.userName,
+                            userId:user.id,
+                            authorPicId:user.accountPicNumber,
+                            type:'paidButNotPrivate',
+                            message: 'Оплата гадания 50 монет от'+ user.userName
+                        })
+                    this.onWitchChat(param.witchId, param.server, param.client)
+
+                }else
+                    param.client.emit('error','transaction failed')
+
+            }catch (e){
+                param.client.emit('exception', 'недостаточно монет')
+            }
+
+        }
+
+    }
+
+    async onSendMessagePrivate(param:
+                                   {
+                                       readonly witchId: number;
+                                       readonly authorPicId: number;
+                                       readonly authorName: string;
+                                       readonly message: string;
+                                       readonly type: string;
+                                       userId: number;
+                                       server: Server,
+                                       client: Socket
+                                   }) {
+        const witch = await this.userService.getUserById(param.witchId)
+
+        if(witch){
+            try {
+                const giftTransaction = await this.coinsService.transaction({userId:param.userId, transaction:-80, cause:'Индивидуальное гадание у:'+ witch.userName})
+                const user = await this.userService.getUserById(param.userId)
+                if (giftTransaction&&user)
+                {
+                    const recivedtransaction = await this.coinsService.transaction({userId:param.witchId, transaction:80, cause:'Оплата индивидуального гадания: '+user.userName})
+                    if (!recivedtransaction)await this.coinsService.transaction({userId:param.userId, transaction:-80, cause:'Returned'})
+
+                    await this.messagesService.createMessage(
+                        {
+                            witchId:param.witchId,
+                            authorName:user.userName,
+                            userId:user.id,
+                            authorPicId:user.accountPicNumber,
+                            type:'private',
+                            message: 'Оплата индивидуального гадания 80 монет от'+ user.userName
+                        })
+                    this.onWitchChat(param.witchId, param.server, param.client)
+
+                }else
+                    param.client.emit('error','transaction failed')
+
+            }catch (e){
+
+                param.client.emit('exception', 'недостаточно монет')
+            }
+
+        }
+    }
+
+    async onCoinsUpdated(userId: number, coinsOnAccaunt:number) {
+        //const coinsOnAccaunt= await this.coinsService.getCoinsCount(userId)
+        const usedSocket = this.webSockets.filter(w=>w.userId===userId)
+
+        usedSocket.forEach(w=>{
+            w.socket.emit('coinsOnAccount', {coins:coinsOnAccaunt})
+        })
     }
 }

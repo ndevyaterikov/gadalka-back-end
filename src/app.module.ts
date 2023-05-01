@@ -26,9 +26,12 @@ import {Witch} from "./witch/witch.model";
 import { MessagesModule } from './messages/messages.module';
 import {Message} from "./messages/messages.model";
 import {UserMessages} from "./messages/user-messages.model";
+import {EventEmitterModule} from "@nestjs/event-emitter";
+import { TestwsModule } from './testws/testws.module';
 
 @Module({
   imports: [
+      EventEmitterModule.forRoot(),
       ConfigModule.forRoot({
           envFilePath:`.${process.env.NODE_ENV}.env`
       }),
@@ -60,6 +63,9 @@ import {UserMessages} from "./messages/user-messages.model";
     CoinsModule,
     WitchModule,
     MessagesModule,
+    TestwsModule,
+
+
   ],
   controllers: [],
   providers: [

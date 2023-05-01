@@ -1,6 +1,16 @@
-import {BelongsTo, Column, DataType, ForeignKey, Model, Table} from "sequelize-typescript";
+import {
+    AfterUpdate,
+    BeforeCreate,
+    BeforeUpdate,
+    BelongsTo,
+    Column,
+    DataType,
+    ForeignKey,
+    Model,
+    Table
+} from "sequelize-typescript";
 import {User} from "../users/user.model";
-
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 interface CoinsCreationAttrs{
     userId: number,
@@ -9,6 +19,7 @@ interface CoinsCreationAttrs{
 
 @Table({tableName:'coins'})
 export class Coins extends Model<Coins, CoinsCreationAttrs> {
+
 
     @Column({type: DataType.INTEGER, autoIncrement:true, unique:true, primaryKey:true})
     id: number
@@ -29,4 +40,14 @@ export class Coins extends Model<Coins, CoinsCreationAttrs> {
     @BelongsTo(()=>User)
     owner: User
 
+    @BeforeUpdate
+    @BeforeCreate
+    static afterUpdateCoins(instance:Coins) {
+
+
+        console.log('Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_')
+        console.log('Измеfнение монет на '+instance.transaction + ' у пользователя '
+            + instance.userId + ' причина ' + instance.cause)
+        // do something
+    }
 }

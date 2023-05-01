@@ -5,10 +5,11 @@ import {WsAtStrategy} from "../auth/strategies/ws-at.strategy";
 import {UsersModule} from "../users/users.module";
 import {SequelizeModule} from "@nestjs/sequelize";
 import {User} from "../users/user.model";
-import {Diamonds} from "../diamonds/diamonds.model";
 import {Message} from "../messages/messages.model";
-import {MessagesService} from "../messages/messages.service";
 import {MessagesModule} from "../messages/messages.module";
+import {CoinsModule} from "../coins/coins.module";
+import {CoinsService} from "../coins/coins.service";
+import {Coins} from "../coins/coins.model";
 
 
 @Module({
@@ -16,8 +17,10 @@ import {MessagesModule} from "../messages/messages.module";
     imports:[
         forwardRef(()=>UsersModule),
         forwardRef(()=>MessagesModule),
-        SequelizeModule.forFeature([User, Message]),
-    ]
+        forwardRef(()=>CoinsModule),
+        SequelizeModule.forFeature([User, Message, Coins, Message]),
+    ],
+    exports: [MyGateWay,GatewayService]
 
 })
 export class GatewayModule{}
