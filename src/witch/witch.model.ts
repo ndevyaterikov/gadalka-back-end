@@ -8,6 +8,7 @@ import {User} from "../users/user.model";
 
 interface WitchCreationAttrs{
     desctription: string,
+    pathLink:string
 }
 
 @Table({tableName:'witch'})
@@ -28,6 +29,11 @@ export class Witch extends Model<Witch, WitchCreationAttrs> {
     @ApiProperty({example:'/picture.jpeg', description:'Ссылка на обложку'})
     @Column({type: DataType.STRING, allowNull:false, defaultValue:'/link'})
     linkToCover: string
+
+
+    @ApiProperty({example:'/gadayu', description:'Ссылка на профиль'})
+    @Column({type: DataType.STRING, allowNull:false, unique:true})
+    pathLink: string
 
     @ApiProperty({example:'статус', description:'online/offline'})
     @Column({type: DataType.BOOLEAN, allowNull:false, defaultValue:false})

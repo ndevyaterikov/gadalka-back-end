@@ -33,4 +33,8 @@ export class CreateWitchDto{
     @Length(4,100, {message:'Не меньше 4 и не больше 100'})
     readonly description:string
 
+    @ApiProperty({example:'gadala', description:'Ссылка на профиль'})
+    @IsString({message:'Должно быть строкой'})
+    @Length(4,10, {message:'Не меньше 4 и не больше 10'})
+    readonly pathLink:string
 }

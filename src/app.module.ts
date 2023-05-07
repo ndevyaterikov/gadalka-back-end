@@ -28,6 +28,8 @@ import {Message} from "./messages/messages.model";
 import {UserMessages} from "./messages/user-messages.model";
 import {EventEmitterModule} from "@nestjs/event-emitter";
 import { TestwsModule } from './testws/testws.module';
+import { WitchTasksModule } from './witch-tasks/witch-tasks.module';
+import {WitchTasks} from "./witch-tasks/witch-tasks.model";
 
 @Module({
   imports: [
@@ -48,7 +50,7 @@ import { TestwsModule } from './testws/testws.module';
           database: process.env.POSTGRES_DB,
           models: [User777, User, Role,
               UserRole, Post, Diamonds,
-              Coins, Witch, Message],
+              Coins, Witch, Message, WitchTasks],
           autoLoadModels:true,
           synchronize: true,
         }),
@@ -64,6 +66,7 @@ import { TestwsModule } from './testws/testws.module';
     WitchModule,
     MessagesModule,
     TestwsModule,
+    WitchTasksModule,
 
 
   ],

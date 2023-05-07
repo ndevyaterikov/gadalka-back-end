@@ -10,6 +10,7 @@ import {MessagesModule} from "../messages/messages.module";
 import {CoinsModule} from "../coins/coins.module";
 import {CoinsService} from "../coins/coins.service";
 import {Coins} from "../coins/coins.model";
+import {WitchTasksModule} from "../witch-tasks/witch-tasks.module";
 
 
 @Module({
@@ -18,6 +19,7 @@ import {Coins} from "../coins/coins.model";
         forwardRef(()=>UsersModule),
         forwardRef(()=>MessagesModule),
         forwardRef(()=>CoinsModule),
+        forwardRef(()=>WitchTasksModule),
         SequelizeModule.forFeature([User, Message, Coins, Message]),
     ],
     exports: [MyGateWay,GatewayService]

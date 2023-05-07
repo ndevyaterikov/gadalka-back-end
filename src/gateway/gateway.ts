@@ -25,6 +25,8 @@ import {WsValidationPipe} from "../pipes/ws-validation.pipe";
 import {GetChatDto} from "../messages/dto/get-chat-dto";
 import {CoinGiftDto} from "./dto/coin-gift-dto";
 import {CreateGadanieRequestDto} from "./dto/create-gadanie-request-dto";
+import {JoinRoomDto} from "./dto/join-room-dto";
+import {RoleCheckDto} from "./dto/role-check-dto";
 
 
 interface IRoomParams{
@@ -63,12 +65,20 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     @SubscribeMessage('JoinRoom')
     onJoinRoom(
         @ConnectedSocket() client: Socket,
-        @MessageBody() dto:{witchId:string, userId:string}){
+        @MessageBody(WsValidationPipe) dto:JoinRoomDto){
 
         this.gateWayService.onJoinRoom(dto, client, this.server)
-
-
     }
+
+
+    @SubscribeMessage('RoleCheck')
+    onRoleCheck(
+        @ConnectedSocket() client: Socket,
+        @MessageBody(WsValidationPipe) dto:RoleCheckDto){
+
+        this.gateWayService.onRoleCheck(dto.witchId, client, this.server)
+    }
+
 
    // @Public()
     @UseGuards(WsAtGuard)
@@ -125,6 +135,17 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
           this.gateWayService.onSendCoins({...data,userId:userId, server:this.server, client:client})
     }
 
+
+
+    @UseGuards(WsAtGuard)
+    @SubscribeMessage('witchTaskCompleated')
+    @UseFilters(new AllWSExceptionsFilter())
+    onWitchTaskCompleated(
+        @ConnectedSocket() client:Socket,
+        @MessageBody(WsValidationPipe) dto:{taskId:number} ,
+    ){
+        this.gateWayService.onWitchTaskCompleated({...dto, server:this.server, client:client})
+    }
 
 
     //@UsePipes(WsValidationPipe)

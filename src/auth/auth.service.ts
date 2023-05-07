@@ -1,10 +1,7 @@
 import {ForbiddenException, HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {InjectModel} from "@nestjs/sequelize";
 import {CreateUserDto} from "./dto/create-user-dto";
-
-import {Tokens, ReturnObj} from "./types/tokens.type";
+import {ReturnObj} from "./types/tokens.type";
 import {JwtService} from "@nestjs/jwt";
-import {Op} from "sequelize";
 import UserDto from "./dto/user-dto";
 import {User} from "../users/user.model";
 import {UsersService} from "../users/users.service";

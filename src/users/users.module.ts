@@ -13,13 +13,14 @@ import {Witch} from "../witch/witch.model";
 import {MessagesService} from "../messages/messages.service";
 import {MessagesModule} from "../messages/messages.module";
 import {Message} from "../messages/messages.model";
+import {WitchTasks} from "../witch-tasks/witch-tasks.model";
 
 @Module({
   controllers: [UsersController],
   providers: [UsersService],
   imports:[
       RolesModule,
-      SequelizeModule.forFeature([User, Role, UserRole, Post, Witch, Message]),
+      SequelizeModule.forFeature([User, Role, UserRole, Post, Witch, Message, WitchTasks]),
       forwardRef(()=>Auth1Module),
       forwardRef(()=>AuthModule),
       forwardRef(()=>MessagesModule),

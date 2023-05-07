@@ -7,6 +7,7 @@ import {Diamonds} from "../diamonds/diamonds.model";
 import {Witch} from "../witch/witch.model";
 import {Message} from "../messages/messages.model";
 import {UserMessages} from "../messages/user-messages.model";
+import {WitchTasks} from "../witch-tasks/witch-tasks.model";
 
 interface UserCreationAttrs{
     email: string,
@@ -54,6 +55,9 @@ export class User extends Model<User, UserCreationAttrs> {
 
     @HasMany(()=>Message)
     messages: Message[]
+
+    @HasMany(()=>WitchTasks)
+    tasks: WitchTasks[]
 
     @HasMany(()=>Post)
     posts: Post[]

@@ -9,6 +9,7 @@ import {TypeOfMessageInChat} from "../messages/dto/messages-type";
 import {MessagesService} from "../messages/messages.service";
 import {CoinsService} from "../coins/coins.service";
 import {v4} from "uuid"
+import {WitchTasksService} from "../witch-tasks/witch-tasks.service";
 
 interface IRoomParams{
     roomId:string,
@@ -24,13 +25,14 @@ export class GatewayService {
         @InjectModel(Message) private messageRepository: typeof Message,
         private userService: UsersService,
         private messagesService: MessagesService,
-        private coinsService: CoinsService
+        private coinsService: CoinsService,
+        private witchTasksService:WitchTasksService
     ) {
     }
 
     webSockets = []
 
-    onJoinRoom(dto:{witchId:string, userId:string}, client:Socket, server: Server){
+    onJoinRoom(dto, client:Socket, server: Server){
 
             const clientId = v4()
             if (typeof dto.userId==='undefined'){dto.userId="guest"}
@@ -305,8 +307,10 @@ export class GatewayService {
                             type:'paidButNotPrivate',
                             message: 'Оплата гадания 50 монет от'+ user.userName
                         })
-                    this.onWitchChat(param.witchId, param.server, param.client)
-
+                    await this.onWitchChat(param.witchId, param.server, param.client)
+                    await this.witchTasksService.createWitchTask({witchId:param.witchId, authorName:param.authorName, task:param.message, userId:param.userId, authorPicId:param.authorPicId, type:'paidNotPrivate'})
+                    const witchUpdatedWhithTasks = await this.userService.getUserById(param.witchId)
+                    this.sendWitchTasks(witchUpdatedWhithTasks, 'NewTask')
                 }else
                     param.client.emit('error','transaction failed')
 
@@ -349,7 +353,11 @@ export class GatewayService {
                             type:'private',
                             message: 'Оплата индивидуального гадания 80 монет от'+ user.userName
                         })
-                    this.onWitchChat(param.witchId, param.server, param.client)
+
+                    await this.onWitchChat(param.witchId, param.server, param.client)
+                    await this.witchTasksService.createWitchTask({witchId:param.witchId, authorName:param.authorName, task:param.message, userId:param.userId, authorPicId:param.authorPicId, type:'private'})
+                    const witchUpdatedWhithTasks = await this.userService.getUserById(param.witchId)
+                    this.sendWitchTasks(witchUpdatedWhithTasks, 'NewTask')
 
                 }else
                     param.client.emit('error','transaction failed')
@@ -369,5 +377,36 @@ export class GatewayService {
         usedSocket.forEach(w=>{
             w.socket.emit('coinsOnAccount', {coins:coinsOnAccaunt})
         })
+    }
+
+    async onRoleCheck(witchId: number, client: Socket, server: Server) {
+
+        const user= await this.userService.getUserById(witchId)
+        let isWitch:boolean
+
+        if(!user)return
+        if(user.roles.find(role=>role.value==='WITCH')){isWitch=true}else {isWitch=false}
+
+        if(isWitch){
+            this.sendWitchTasks(user, 'initialLoading')
+        }
+    }
+
+    sendWitchTasks(witch:User, typeOfRequest:string){
+        const usedSocket = this.webSockets.filter(w=>w.userId===witch.id)
+        usedSocket.forEach(w=>{
+            w.socket.emit('witchTasks'+typeOfRequest, {tasks:witch.tasks.filter((v,i,a)=>v.isTaskCompleated===false)})
+        })
+
+    }
+
+    async onWitchTaskCompleated(param: { server: Server; client: Socket; taskId: number }) {
+        try {
+            const task = await this.witchTasksService.setWitchTaskCompleated(param.taskId)
+            const witch = await this.userService.getUserById(task.userId)
+            this.sendWitchTasks(witch, 'initialLoading')
+        }catch (e){
+
+        }
     }
 }
