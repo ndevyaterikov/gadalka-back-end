@@ -27,7 +27,7 @@ export class Witch extends Model<Witch, WitchCreationAttrs> {
     viewers:number
 
     @ApiProperty({example:'/picture.jpeg', description:'Ссылка на обложку'})
-    @Column({type: DataType.STRING, allowNull:false, defaultValue:'/link'})
+    @Column({type: DataType.STRING, allowNull:false, defaultValue:'defaultCover.jpeg'})
     linkToCover: string
 
 
