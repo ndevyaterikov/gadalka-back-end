@@ -10,6 +10,7 @@ import {MessagesService} from "../messages/messages.service";
 import {CoinsService} from "../coins/coins.service";
 import {v4} from "uuid"
 import {WitchTasksService} from "../witch-tasks/witch-tasks.service";
+import {WitchService} from "../witch/witch.service";
 
 interface IRoomParams{
     roomId:string,
@@ -26,7 +27,8 @@ export class GatewayService {
         private userService: UsersService,
         private messagesService: MessagesService,
         private coinsService: CoinsService,
-        private witchTasksService:WitchTasksService
+        private witchTasksService:WitchTasksService,
+        private witchService:WitchService
     ) {
     }
 
@@ -34,13 +36,15 @@ export class GatewayService {
 
     onJoinRoom(dto, client:Socket, server: Server){
 
-            const clientId = v4()
+        const clientId = v4()
             if (typeof dto.userId==='undefined'){dto.userId="guest"}
             client.join(String(dto.witchId))
             this.webSockets.push({roomId:dto.witchId, userId:dto.userId, socket: client, clientId: clientId})
+
             let viewers:number = 0
             this.webSockets.forEach(w=>{
-                if(w.roomId = dto.witchId){viewers++}
+                console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+                console.log('RoomId: '+ w.roomId + ' userId: '+ w.userId)
             })
 
             server.to(String(dto.witchId)).emit(
@@ -49,10 +53,11 @@ export class GatewayService {
                     witchId:dto.witchId,
                     userId:dto.userId,
                     clientId: clientId,
-                    viewers: viewers
+                    viewers: this.webSockets.filter(ws=>ws.roomId==dto.witchId).length
                 })
-
             client.emit('RequestOfChatIndividual',{witchId:dto.witchId, userId:dto.userId})
+            this.witchService.upDateViewersOnWitch(dto.witchId,viewers)
+
         }
 
 
@@ -65,7 +70,7 @@ export class GatewayService {
         let viewers:number = 0
         if (socketLeft){
         this.webSockets.forEach(w=>{
-            if(w.roomId = socketLeft.roomId){viewers++}
+            if(w.roomId === socketLeft.roomId){viewers++}
         })
 
 
@@ -76,8 +81,6 @@ export class GatewayService {
                 clientId: socketLeft.clientId,
                 viewers:viewers
             })}
-
-
         }
 
 
@@ -408,5 +411,28 @@ export class GatewayService {
         }catch (e){
 
         }
+    }
+
+
+    onLeftRoom(param: { server: Server; client: Socket; userId: number }) {
+
+        const socketLeft =this.webSockets.filter(w=>w.socket===param.client)[0]
+        param.client.leave(String(socketLeft.roomId))
+        this.webSockets = this.webSockets.filter(w=>w.socket!==param.client)
+
+
+        let viewers:number = 0
+        if (socketLeft){
+            this.webSockets.forEach(w=>{
+                if(w.roomId === socketLeft.roomId){viewers++}
+            })
+
+            param.server.to(String(socketLeft.roomId)).emit('user-left-the-room',
+                {
+                    witchId:socketLeft.roomId,
+                    userId:socketLeft.userId,
+                    clientId: socketLeft.clientId,
+                    viewers:viewers
+                })}
     }
 }
