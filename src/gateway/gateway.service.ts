@@ -34,20 +34,16 @@ export class GatewayService {
 
     webSockets = []
 
-    onJoinRoom(dto, client:Socket, server: Server){
+    async onJoinRoom(dto, client:Socket, server: Server){
 
         const clientId = v4()
             if (typeof dto.userId==='undefined'){dto.userId="guest"}
             client.join(String(dto.witchId))
             this.webSockets.push({roomId:dto.witchId, userId:dto.userId, socket: client, clientId: clientId})
+            const sockets = await server.in(String(dto)).fetchSockets()
 
-            let viewers:number = 0
-            this.webSockets.forEach(w=>{
-                console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
-                console.log('RoomId: '+ w.roomId + ' userId: '+ w.userId)
-            })
 
-            server.to(String(dto.witchId)).emit(
+        server.to(String(dto.witchId)).emit(
                 'user-joined-room',
                 {
                     witchId:dto.witchId,
@@ -56,7 +52,7 @@ export class GatewayService {
                     viewers: this.webSockets.filter(ws=>ws.roomId==dto.witchId).length
                 })
             client.emit('RequestOfChatIndividual',{witchId:dto.witchId, userId:dto.userId})
-            this.witchService.upDateViewersOnWitch(dto.witchId,viewers)
+            this.witchService.upDateViewersOnWitch(dto.witchId,this.webSockets.filter(ws=>ws.roomId==dto.witchId).length)
 
         }
 
@@ -336,6 +332,7 @@ export class GatewayService {
                                        server: Server,
                                        client: Socket
                                    }) {
+        console.log('in onSendMessagePrivate witchId '+ param.witchId )
         const witch = await this.userService.getUserById(param.witchId)
 
         if(witch){
@@ -375,7 +372,15 @@ export class GatewayService {
 
     async onCoinsUpdated(userId: number, coinsOnAccaunt:number) {
         //const coinsOnAccaunt= await this.coinsService.getCoinsCount(userId)
+        this.webSockets.forEach(ws=>{
+            console.log('roomId '+ws.roomId)
+            console.log('userId '+ws.userId)
+        })
         const usedSocket = this.webSockets.filter(w=>w.userId===userId)
+
+        console.log('onCoinsUpdatedonCoinsUpdatedonCoinsUpdatedonCoinsUpdatedonCoinsUpdatedonCoinsUpdatedonCoinsUpdated')
+        console.log(userId)
+        console.log(coinsOnAccaunt)
 
         usedSocket.forEach(w=>{
             w.socket.emit('coinsOnAccount', {coins:coinsOnAccaunt})
@@ -414,15 +419,16 @@ export class GatewayService {
     }
 
 
-    onLeftRoom(param: { server: Server; client: Socket; userId: number }) {
+    onLeftRoom(param: { server: Server; client: Socket }) {
 
         const socketLeft =this.webSockets.filter(w=>w.socket===param.client)[0]
+        if (!socketLeft)return
+
         param.client.leave(String(socketLeft.roomId))
         this.webSockets = this.webSockets.filter(w=>w.socket!==param.client)
 
-
         let viewers:number = 0
-        if (socketLeft){
+
             this.webSockets.forEach(w=>{
                 if(w.roomId === socketLeft.roomId){viewers++}
             })
@@ -433,6 +439,9 @@ export class GatewayService {
                     userId:socketLeft.userId,
                     clientId: socketLeft.clientId,
                     viewers:viewers
-                })}
+                })
+        this.witchService.upDateViewersOnWitch(socketLeft.roomId,viewers)
+
     }
+
 }

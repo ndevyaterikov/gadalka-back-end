@@ -51,6 +51,7 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
         this.gateWayService.onUserDisconnect(client, this.server)
     }
 
+
     @Public()
     @SubscribeMessage('JoinRoom')
     onJoinRoom(
@@ -83,16 +84,15 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     }
 
 
-
+    @Public()
     @UseGuards(WsAtGuard)
     @SubscribeMessage('onLeftRoom')
     @UseFilters(new AllWSExceptionsFilter())
     onLeftRoom(
-        @WsGetCurrentUserId() userId:number,
         @ConnectedSocket() client: Socket
     ){
-
-        this.gateWayService.onLeftRoom({userId:userId, server:this.server, client:client})
+        console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
+        this.gateWayService.onLeftRoom({server:this.server, client:client})
     }
 
 
