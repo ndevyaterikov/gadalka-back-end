@@ -79,10 +79,8 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
        @MessageBody(WsValidationPipe) data:CreateMessageDto,
        @ConnectedSocket() client: Socket
     ){
-        console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
-        console.log(userId)
-        console.log('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz')
-        this.gateWayService.onSendMessage({...data,userId:100, server:this.server, client:client})
+
+        this.gateWayService.onSendMessage({...data,userId:userId, server:this.server, client:client})
     }
 
 
