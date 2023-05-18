@@ -26,7 +26,7 @@ import {Public} from "../auth/common/decorators/public.decorator";
 @Injectable()
 @WebSocketGateway(3003,
     {  cors: {
-        origin: 'http://localhost:3000',
+        origin: `${process.env.CORS_HOST}`,
         methods: ['GET', 'POST'],
     },})
 export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
