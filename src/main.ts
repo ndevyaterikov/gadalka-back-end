@@ -1,26 +1,32 @@
 import {NestFactory, Reflector} from '@nestjs/core';
 import { AppModule } from './app.module';
 import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
-import {JwtAuth1Guard} from "./auth1/jwt-auth1.guard";
 import {ValidationPipe} from "./pipes/validation.pipe";
-import {AtGuard} from "./auth/common/guards/at.guard";
-import {NestExpressApplication} from "@nestjs/platform-express";
 import * as cookieParser from "cookie-parser"
 import * as fs from "fs";
 
+import {ExpressAdapter} from "@nestjs/platform-express";
+import * as https from "https";
+import {ExtendedSocketIoAdapter} from "./ExtendedSocketIoAdapter";
+import {AbstractWsAdapter} from "@nestjs/websockets";
+var express = require('express');
+
+
 async function bootstrap() {
   const PORT = process.env.PORT || 5000
-
-/*  const httpsOptions = {
+  const httpsOptions = {
     key: fs.readFileSync('./secrets/key-rsa.pem'),
     cert: fs.readFileSync('./secrets/cert.pem'),
-  };*/
+  };
 
+  const server = express();
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions: httpsOptions,
+  });
 
-  const app = await NestFactory.create(AppModule, /*{
-    httpsOptions,
-  }*/
-  );
+  const wssServer = https.createServer(httpsOptions);
+  app.useWebSocketAdapter(new ExtendedSocketIoAdapter(wssServer));
+
   app.enableCors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     origin: `${process.env.CORS_HOST}`,
@@ -28,6 +34,7 @@ async function bootstrap() {
 
   })
   app.use(cookieParser())
+
 
   const config = new DocumentBuilder()
       .setTitle('API Гадание')
@@ -40,7 +47,11 @@ async function bootstrap() {
   SwaggerModule.setup('/api/docs', app, document)
   app.useGlobalPipes(new ValidationPipe())
 
+  await app.init();
 
-  await app.listen(PORT, ()=>{console.log(`Server started on port = ${PORT}`)});
+  app.listen(PORT, ()=>{console.log(`Server started on port = ${PORT}`)});
+  wssServer.listen(3003, ()=>{console.log(`Server started on port = 3004`)})
+
+
 }
 bootstrap();

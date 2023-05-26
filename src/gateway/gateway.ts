@@ -20,18 +20,17 @@ import {CoinGiftDto} from "./dto/coin-gift-dto";
 import {JoinRoomDto} from "./dto/join-room-dto";
 import {RoleCheckDto} from "./dto/role-check-dto";
 import {Public} from "../auth/common/decorators/public.decorator";
-
-
+import * as fs from "fs";
 
 @Injectable()
-@WebSocketGateway(3003,
-    {  cors: {
+@WebSocketGateway(/*3003,
+    {
+        cors: {
         origin: `${process.env.CORS_HOST}`,
         methods: ['GET', 'POST'],
-    },})
+    },}, */)
 export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     constructor(private readonly gateWayService: GatewayService) {}
-
 
     @WebSocketServer()
     server: Server
@@ -39,7 +38,6 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     onModuleInit() {
         this.server.on('connection', socket=> {
             socket.emit('connected')
-
         })
         }
 
