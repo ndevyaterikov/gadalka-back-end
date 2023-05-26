@@ -50,7 +50,7 @@ async function bootstrap() {
   await app.init();
 
   app.listen(PORT, ()=>{console.log(`Server started on port = ${PORT}`)});
-  wssServer.listen(3003, ()=>{console.log(`Server started on port = 3004`)})
+  wssServer.listen(3003, ()=>{console.log(`WS Server started on port = 3003`)})
 
 
 }
