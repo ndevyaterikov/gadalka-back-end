@@ -6,10 +6,21 @@ import {ValidationPipe} from "./pipes/validation.pipe";
 import {AtGuard} from "./auth/common/guards/at.guard";
 import {NestExpressApplication} from "@nestjs/platform-express";
 import * as cookieParser from "cookie-parser"
+import * as fs from "fs";
 
 async function bootstrap() {
   const PORT = process.env.PORT || 5000
-  const app = await NestFactory.create(AppModule);
+
+/*  const httpsOptions = {
+    key: fs.readFileSync('./secrets/key-rsa.pem'),
+    cert: fs.readFileSync('./secrets/cert.pem'),
+  };*/
+
+
+  const app = await NestFactory.create(AppModule, /*{
+    httpsOptions,
+  }*/
+  );
   app.enableCors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     origin: `${process.env.CORS_HOST}`,
