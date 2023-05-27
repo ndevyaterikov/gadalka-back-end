@@ -23,12 +23,12 @@ import {Public} from "../auth/common/decorators/public.decorator";
 import * as fs from "fs";
 
 @Injectable()
-@WebSocketGateway(/*3003,
+@WebSocketGateway(3003,
     {
         cors: {
         origin: `${process.env.CORS_HOST}`,
         methods: ['GET', 'POST'],
-    },}, */)
+    },}, )
 export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     constructor(private readonly gateWayService: GatewayService) {}
 

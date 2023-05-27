@@ -14,18 +14,18 @@ var express = require('express');
 
 async function bootstrap() {
   const PORT = process.env.PORT || 5000
-  const httpsOptions = {
+ /* const httpsOptions = {
     key: fs.readFileSync('./secrets/key-rsa.pem'),
     cert: fs.readFileSync('./secrets/cert.pem'),
-  };
+  };*/
 
   const server = express();
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create(AppModule, /*{
     httpsOptions: httpsOptions,
-  });
+  }*/);
 
-  const wssServer = https.createServer(httpsOptions);
-  app.useWebSocketAdapter(new ExtendedSocketIoAdapter(wssServer));
+  //const wssServer = https.createServer(httpsOptions);
+  //app.useWebSocketAdapter(new ExtendedSocketIoAdapter(wssServer));
 
   app.enableCors({
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -50,7 +50,7 @@ async function bootstrap() {
   await app.init();
 
   app.listen(PORT, ()=>{console.log(`Server started on port = ${PORT}`)});
-  wssServer.listen(3003, ()=>{console.log(`WS Server started on port = 3003`)})
+ // wssServer.listen(3003, ()=>{console.log(`WS Server started on port = 3003`)})
 
 
 }
