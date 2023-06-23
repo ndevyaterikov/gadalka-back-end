@@ -7,6 +7,7 @@ import {Witch} from "./witch.model";
 import {CreateWitchDto} from "./dto/create-witch-dto";
 import CreateUserDtoFromwitch from "./dto/create-user-dto-fromwitch";
 import ResponseWitchDto from "./dto/response-witch-dto";
+import {SetOnlineWitchStatusDto} from "./dto/set-online-witch-status-dto";
 
 @Injectable()
 export class WitchService {
@@ -56,6 +57,21 @@ export class WitchService {
                     viewers:viewers,
                 },
                 {where:{userId:witchId}})
+        }catch (e) {
+            console.log(e)
+        }
+
+    }
+
+    async setOnLineWitchStatus(setOnlineWitchStatusDto: SetOnlineWitchStatusDto) {
+        try {
+            await this.witchRepository.update(
+                {
+                        isOnLine:setOnlineWitchStatusDto.isOnLine,
+                },
+                {where:{userId:setOnlineWitchStatusDto.witchId}})
+
+            return {id:setOnlineWitchStatusDto.witchId, isOnLine:setOnlineWitchStatusDto.isOnLine}
         }catch (e) {
             console.log(e)
         }
