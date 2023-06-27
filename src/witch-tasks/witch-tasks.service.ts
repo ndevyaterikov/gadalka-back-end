@@ -129,4 +129,28 @@ export class WitchTasksService {
 
         return tasks
     }
+
+    async getLineForGadaniye(dto) {
+        console.log(dto.witchId)
+        try {
+            const tasks = await this.witchTasksRepository.findAll(
+                {
+                    where:{userId:dto.witchId, isTaskCompleated:false},
+                    order:[[ 'updatedAt','ASC']],
+                })
+
+            const tasksWithoutFirst = tasks.filter((task,i,a)=>i>0)
+            const authorTasks = tasksWithoutFirst.filter(tasks=>tasks.authorId==dto.authorId)
+            const indexes:number[] = []
+            authorTasks.forEach(at=>{
+                indexes.push(tasksWithoutFirst.findIndex(t=>t.id==at.id)+1)
+            })
+
+            return {indexes, currentAuthorId:tasks[0].authorId}
+        }
+        catch (e) {
+            return e
+
+        }
+    }
 }

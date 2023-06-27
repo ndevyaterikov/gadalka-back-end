@@ -7,7 +7,7 @@ import {Roles} from "./roles-auth1.decorator";
 import {Roles1Guard} from "./roles1.guard";
 
 @ApiTags('Авторизация')
-@Controller('auth')
+@Controller('api/auth')
 export class Auth1Controller {
 
     constructor(private authService:Auth1Service) {

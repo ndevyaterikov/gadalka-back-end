@@ -10,6 +10,7 @@ import {CoinsHistoryDto} from "../coins/dto/coins-history-dto";
 import {NUMBER} from "sequelize";
 import {TasksHistoryDto} from "./dto/tasks-history-dto";
 import {SetTaskCompleatedDto} from "./dto/set-task-compleated-dto";
+import {GetLineForGadaniyeDto} from "./dto/getLineForGadaniye-dto";
 
 @Controller('witch-tasks')
 export class WitchTasksController {
@@ -69,6 +70,16 @@ export class WitchTasksController {
         @Body() dto: SetTaskCompleatedDto,
     ){
         return this.witchTasksService.setTaskCompleated(dto.taskId, dto.limit, dto.page)
+    }
+
+
+
+    @ApiOperation({summary:'Получить очередь на гадание'})
+    @ApiResponse({status:200})
+    @UsePipes(ValidationPipe)
+    @Post('/getLineForGadaniye')
+    getLineForGadaniye(@Body() dto:GetLineForGadaniyeDto){
+        return this.witchTasksService.getLineForGadaniye(dto)
     }
 
 }

@@ -309,7 +309,7 @@ export class GatewayService {
                     await this.onWitchChat(param.witchId, param.server, param.client)
                     await this.witchTasksService.createWitchTask({witchId:param.witchId, authorName:param.authorName, task:param.message, userId:param.userId, authorPicId:param.authorPicId, type:'paidNotPrivate'})
                     const witchUpdatedWhithTasks = await this.userService.getUserById(param.witchId)
-                    this.sendWitchTasks(witchUpdatedWhithTasks, 'NewTask')
+                    this.sendWitchTasks(witchUpdatedWhithTasks, 'NewTask',param.userId)
                 }else
                     param.client.emit('error','transaction failed')
 
@@ -357,7 +357,7 @@ export class GatewayService {
                     await this.onWitchChat(param.witchId, param.server, param.client)
                     await this.witchTasksService.createWitchTask({witchId:param.witchId, authorName:param.authorName, task:param.message, userId:param.userId, authorPicId:param.authorPicId, type:'private'})
                     const witchUpdatedWhithTasks = await this.userService.getUserById(param.witchId)
-                    this.sendWitchTasks(witchUpdatedWhithTasks, 'NewTask')
+                    this.sendWitchTasks(witchUpdatedWhithTasks, 'NewTask', param.userId)
 
                 }else
                     param.client.emit('error','transaction failed')
@@ -396,23 +396,35 @@ export class GatewayService {
         if(user.roles.find(role=>role.value==='WITCH')){isWitch=true}else {isWitch=false}
 
         if(isWitch){
-            this.sendWitchTasks(user, 'initialLoading')
+            this.sendWitchTasks(user, 'initialLoading',-2)
         }
     }
 
-    sendWitchTasks(witch:User, typeOfRequest:string){
-        const usedSocket = this.webSockets.filter(w=>w.userId===witch.id)
-        usedSocket.forEach(w=>{
+    async sendWitchTasks(witch:User, typeOfRequest:string, authorId:number){
+        const usedSocketOnlyForWitch = this.webSockets.filter(w=>w.userId===witch.id)
+        usedSocketOnlyForWitch.forEach(w=>{
             w.socket.emit('witchTasks'+typeOfRequest, {tasks:witch.tasks.filter((v,i,a)=>v.isTaskCompleated===false)})
         })
+    if (authorId===-2)return
 
+
+    const lineForGadaniye = await this.witchTasksService.getLineForGadaniye({witchId:witch.id, authorId:authorId})
+        console.log('authorId '+authorId)
+        console.log('authorId '+typeof authorId)
+
+        const usedSocketsForLine = this.webSockets.filter(w=>w.userId==authorId)
+        console.log('lenght '+usedSocketsForLine.length)
+        this.webSockets.forEach(w=>console.log('ws  '+w.userId))
+        usedSocketsForLine.forEach(w=>{
+            w.socket.emit('lineForGadaniye',{lineForGadaniye})
+        })
     }
 
     async onWitchTaskCompleated(param: { server: Server; client: Socket; taskId: number }) {
         try {
             const task = await this.witchTasksService.setWitchTaskCompleated(param.taskId)
             const witch = await this.userService.getUserById(task.userId)
-            this.sendWitchTasks(witch, 'initialLoading')
+            this.sendWitchTasks(witch, 'initialLoading',-2)
         }catch (e){
 
         }
