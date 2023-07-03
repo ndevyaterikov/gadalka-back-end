@@ -1,19 +1,21 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {GetWitchTasksDto} from "./dto/get-witchTasks-dto";
+import {forwardRef, HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
 import {InjectModel} from "@nestjs/sequelize";
 import {User} from "../users/user.model";
-import {Message} from "../messages/messages.model";
 import {UsersService} from "../users/users.service";
 import {WitchTasks} from "./witch-tasks.model";
-import {TypeOfMessageInChat} from "../messages/dto/messages-type";
-import {where} from "sequelize";
+import {GatewayService} from "../gateway/gateway.service";
 
 @Injectable()
 export class WitchTasksService {
     constructor(
         @InjectModel(User) private userRepository: typeof User,
         @InjectModel(WitchTasks) private witchTasksRepository: typeof WitchTasks,
-        private userService: UsersService
+
+        @Inject(forwardRef(() => GatewayService))
+        private gatewayService:GatewayService,
+
+        private userService: UsersService,
+
     ) {
     }
 
@@ -80,7 +82,7 @@ export class WitchTasksService {
         const tasks = await this.witchTasksRepository.findAll(
             {
                 where:{userId:witchId, isTaskCompleated:false},
-                order:[[ 'updatedAt','DESC']],
+                order:[[ 'updatedAt','ASC']],
             })
 
         return tasks
@@ -126,7 +128,7 @@ export class WitchTasksService {
         await this.witchTasksRepository.update({isTaskCompleated:true}, {where:{id:taskId}})
         const task = await this.witchTasksRepository.findOne({where:{id:taskId}})
         const tasks = await this.getHistoryOfCompleatedTasks(task.userId, limit, page)
-
+        await this.gatewayService.sentCurrentGadaniyeUser(task.userId, task.authorId)
         return tasks
     }
 
@@ -146,7 +148,7 @@ export class WitchTasksService {
                 indexes.push(tasksWithoutFirst.findIndex(t=>t.id==at.id)+1)
             })
 
-            return {indexes, currentAuthorId:tasks[0].authorId}
+            return {indexes, userpicId:tasks[0].authorPicId,userName:tasks[0].authorName}
         }
         catch (e) {
             return e

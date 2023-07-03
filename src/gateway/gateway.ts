@@ -137,18 +137,6 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     }
 
 
-
-    @UseGuards(WsAtGuard)
-    @SubscribeMessage('witchTaskCompleated')
-    @UseFilters(new AllWSExceptionsFilter())
-    onWitchTaskCompleated(
-        @ConnectedSocket() client:Socket,
-        @MessageBody(WsValidationPipe) dto:{taskId:number} ,
-    ){
-        this.gateWayService.onWitchTaskCompleated({...dto, server:this.server, client:client})
-    }
-
-
     @Public()
     @SubscribeMessage('gettingWitchChatIndividual')
     onWitchChatIndividual(
@@ -158,6 +146,14 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
             this.gateWayService.onWitchChatIndividual(witchId, this.server, client)
         }
 
+    @Public()
+    @SubscribeMessage('gettingWitchChatIndividual')
+    onGettingCurrentGadanieUser(
+        @ConnectedSocket() client:Socket,
+        @MessageBody(WsValidationPipe) {witchId}:GetChatDto)
+    {
+        this.gateWayService.onGettingCurrentGadanieUser(witchId, this.server, client)
+    }
 
 
 
@@ -167,4 +163,14 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     ){
         this.gateWayService.onCoinsUpdated(dto.userId, 23)
     }
+
+    @UseGuards(WsAtGuard)
+    @SubscribeMessage('requestLineForGadaniye')
+    requestLineForGadaniye(
+        @WsGetCurrentUserId() userId:number,
+        @MessageBody(WsValidationPipe) dto:{witchId:number},
+    ){
+        this.gateWayService.requestLineForGadaniye(dto.witchId, userId)
+    }
+
 }

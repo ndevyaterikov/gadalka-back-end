@@ -405,28 +405,39 @@ export class GatewayService {
         usedSocketOnlyForWitch.forEach(w=>{
             w.socket.emit('witchTasks'+typeOfRequest, {tasks:witch.tasks.filter((v,i,a)=>v.isTaskCompleated===false)})
         })
-    if (authorId===-2)return
 
 
-    const lineForGadaniye = await this.witchTasksService.getLineForGadaniye({witchId:witch.id, authorId:authorId})
-        console.log('authorId '+authorId)
-        console.log('authorId '+typeof authorId)
+        const lineForGadaniye = await this.witchTasksService.getLineForGadaniye({witchId:witch.id, authorId:authorId})
 
-        const usedSocketsForLine = this.webSockets.filter(w=>w.userId==authorId)
-        console.log('lenght '+usedSocketsForLine.length)
-        this.webSockets.forEach(w=>console.log('ws  '+w.userId))
-        usedSocketsForLine.forEach(w=>{
-            w.socket.emit('lineForGadaniye',{lineForGadaniye})
+        const usedSocketForAllRoom = this.webSockets.filter(w=>w.roomId===witch.id)
+        usedSocketForAllRoom.forEach(w=>{
+            w.socket.emit('currentGadaniyeUser', {userpicId:lineForGadaniye.userpicId,userName:lineForGadaniye.userName})
         })
+
+       /* const usedSocketOnlyForAuthor = this.webSockets.filter(w=>w.userId===authorId)
+        usedSocketOnlyForAuthor.forEach(w=>{
+            w.socket.emit('lineForGadaniye', {lineForGadaniye})
+        })*/
+
+
+
     }
 
-    async onWitchTaskCompleated(param: { server: Server; client: Socket; taskId: number }) {
+    async sentCurrentGadaniyeUser(witchId:number, authorId:number) {
         try {
-            const task = await this.witchTasksService.setWitchTaskCompleated(param.taskId)
-            const witch = await this.userService.getUserById(task.userId)
-            this.sendWitchTasks(witch, 'initialLoading',-2)
-        }catch (e){
+            const lineForGadaniye = await this.witchTasksService.getLineForGadaniye({witchId:witchId, authorId:authorId})
+            const usedSockets = this.webSockets.filter(w=>w.roomId===witchId)
+            usedSockets.forEach(w=>{
+                w.socket.emit('currentGadaniyeUserAfterTaskCompleated', {userpicId:lineForGadaniye.userpicId,userName:lineForGadaniye.userName})
+            })
 
+         /*   const usedSocketsForAuthor = this.webSockets.filter(w=>w.userId===authorId)
+            usedSocketsForAuthor.forEach(w=>{
+                w.socket.emit('lineForGadaniye', {indexes:lineForGadaniye.indexes,userpicId:lineForGadaniye.userpicId,userName:lineForGadaniye.userName})
+            })*/
+
+
+        }catch (e){
         }
     }
 
@@ -456,4 +467,35 @@ export class GatewayService {
 
     }
 
+    async onGettingCurrentGadanieUser(witchId: number, server: Server, client: Socket) {
+        try {
+            const authorSocet = this.webSockets.filter(w=>w.socket===client)
+            console.log('authorSocet lenght '+ authorSocet.length)
+            const userId = authorSocet[0].userId
+            const line = await this.witchTasksService.getLineForGadaniye({witchId:witchId, authorId:userId})
+
+            if (line){
+                client.emit('currentGadaniyeUserInitial',{userpicId:line.userpicId,userName:line.userName})
+            }else {
+                client.emit('error','CurrentGadanieUser not found')
+            }
+
+        }catch (e) {
+            client.emit('error','chat error')
+        }
+
+    }
+
+    async requestLineForGadaniye(witchId: number, userId: number) {
+        try {
+            const lineForGadaniye = await this.witchTasksService.getLineForGadaniye({witchId:witchId, authorId:userId})
+            const usedSocketsForAuthor = this.webSockets.filter(w=>w.userId===userId)
+               usedSocketsForAuthor.forEach(w=>{
+                   w.socket.emit('lineForGadaniye', {indexes:lineForGadaniye.indexes})
+               })
+
+
+        }catch (e){
+        }
+    }
 }
