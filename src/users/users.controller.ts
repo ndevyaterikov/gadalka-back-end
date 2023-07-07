@@ -66,6 +66,16 @@ export class UsersController {
     }
 
 
+    @ApiOperation({summary:'Изменение статуса: первый раз после активации почты'})
+    @ApiResponse({status:200})
+    @UsePipes(ValidationPipe)
+    @Post('/changeIsFirstTimeAfterActivation')
+    changeIsFirstTimeAfterActivation(
+        @GetCurrentUserId() userId: number
+    ){
+        return this.userService.changeIsFirstTimeAfterActivation(userId)
+    }
+
 
     @ApiOperation({summary:'Удалить аккаунт'})
     @ApiResponse({status:200})
@@ -112,4 +122,8 @@ export class UsersController {
     ban(@Body() dto:BanUserDto){
         return this.userService.ban(dto)
     }
+
+
+
+
 }

@@ -20,5 +20,4 @@ export class CoinsTransactionDto{
         this.userId=userId
         this.cause=cause
     }
-
 }

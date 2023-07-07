@@ -8,7 +8,11 @@ import {UsersService} from "../users/users.service";
 import * as bcrypt from 'bcrypt'
 import {CreateWitchDto} from "../witch/dto/create-witch-dto";
 import {WitchService} from "../witch/witch.service";
-
+import {MailService} from "../mail/mail.service";
+import {v4} from "uuid"
+import {CoinsService} from "../coins/coins.service";
+import {ApiProperty} from "@nestjs/swagger";
+import {IsNumber, IsString, Length} from "class-validator";
 
 
 @Injectable()
@@ -16,7 +20,10 @@ export class AuthService {
     constructor(
                 private userService: UsersService,
                 private witchService: WitchService,
-                private jwtService: JwtService) {
+                private jwtService: JwtService,
+                private mailService: MailService,
+                private coinsService: CoinsService
+                ) {
     }
 
 
@@ -24,6 +31,8 @@ export class AuthService {
     async updateRtHash(userId, rt: string){
         await this.userService.updateRtHash(userId,rt)
     }
+
+
 
     async getTokens(user: User){
         const [at,rt] = await Promise.all(
@@ -59,12 +68,15 @@ export class AuthService {
             throw new HttpException('Пользователь с таким  email уже существует', HttpStatus.BAD_REQUEST)
         }
         const hash = await this.userService.hashData(dto.password)
-        const user = await this.userService.CreateUser({...dto, password:hash})
+        const activationLink = v4()
+        const user = await this.userService.CreateUser({...dto, password:hash, activationLink:activationLink})
 
         const tokens = await this.getTokens(user)
         await this.updateRtHash(user.id,tokens.refresh_token)
         const userDTO = new UserDto(user)
         response.cookie('jwt-RT', tokens.refresh_token, {httpOnly:true})
+        await this.mailService.sendActivationMail(dto.email,`${process.env.BACKEND_HOST}/auth/emailActivation/${activationLink}`)
+
         return {...tokens, userDTO}
     }
 
@@ -79,8 +91,8 @@ export class AuthService {
         const tokens = await this.getTokens(user)
         await this.updateRtHash(user.id,tokens.refresh_token)
         const userDTO = new UserDto(user)
-
         response.cookie('jwt-RT', tokens.refresh_token, {httpOnly:true})
+
         return {...tokens, userDTO}
 
     }
@@ -135,5 +147,21 @@ export class AuthService {
         response.cookie('jwt-RT', tokens.refresh_token, {httpOnly:true})
         return {...tokens, userDTO}
 
+    }
+
+
+    async emailActivation( value: string, res) {
+
+        const user = await this.userService.getUserByActivationLink(value)
+        if(!user){
+            res.redirect(`${process.env.FRONT_URL}/registration`)
+           }else {
+            user.isEmailActivated = true
+            user.isFirstTimeAfterActivation = true
+            this.coinsService.transaction({ userId: user.id, transaction:30,cause:'активация email'})
+            await user.save()
+            console.log('saved')
+            res.redirect(`${process.env.FRONT_URL}/`)
+        }
     }
 }

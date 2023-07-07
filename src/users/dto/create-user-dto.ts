@@ -11,4 +11,10 @@ export class CreateUserDto{
     @IsString({message:'Должно быть строкой'})
     @Length(4,16, {message:'Не меньше 4 и не больше 16'})
     readonly password:string
+
+
+    @ApiProperty({example:'7fe0dc8a-c9e9-4f10-9c55-47d4af6a6f30', description:'v4 random link'})
+    @IsString({message:'Должно быть строкой'})
+    @Length(4,60, {message:'Не меньше 4 и не больше 60'})
+    readonly activationLink:string
 }

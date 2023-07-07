@@ -30,6 +30,8 @@ import {EventEmitterModule} from "@nestjs/event-emitter";
 import { TestwsModule } from './testws/testws.module';
 import { WitchTasksModule } from './witch-tasks/witch-tasks.module';
 import {WitchTasks} from "./witch-tasks/witch-tasks.model";
+import { MailService } from './mail/mail.service';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -67,16 +69,15 @@ import {WitchTasks} from "./witch-tasks/witch-tasks.model";
     MessagesModule,
     TestwsModule,
     WitchTasksModule,
-
-
+    MailModule,
   ],
   controllers: [],
   providers: [
       {
           provide: APP_GUARD,
           useClass: AtGuard,
-
-      }
+      },
+      MailService
   ],
 })
 export class AppModule {}

@@ -9,6 +9,8 @@ import {JwtModule} from "@nestjs/jwt";
 import {User} from "../users/user.model";
 import {UsersModule} from "../users/users.module";
 import {WitchModule} from "../witch/witch.module";
+import {MailModule} from "../mail/mail.module";
+import {CoinsModule} from "../coins/coins.module";
 
 @Module({
   controllers: [AuthController],
@@ -16,6 +18,8 @@ import {WitchModule} from "../witch/witch.module";
   imports:[
       forwardRef(()=>UsersModule),
       forwardRef(()=>WitchModule),
+      forwardRef(()=>MailModule),
+      forwardRef(()=>CoinsModule),
       SequelizeModule.forFeature([User]),
       JwtModule.register({})
   ],

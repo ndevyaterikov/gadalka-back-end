@@ -50,6 +50,20 @@ export class User extends Model<User, UserCreationAttrs> {
     @Column({type: DataType.STRING, allowNull:true})
     hashedRt: string
 
+    @ApiProperty({example:'pdsfdsf', description:'Ссылка активации'})
+    @Column({type: DataType.STRING, allowNull:true})
+    activationLink: string
+
+    @ApiProperty({example:'false/true', description:'проверен ли емейл'})
+    @Column({type: DataType.STRING, defaultValue:false})
+    isEmailActivated: boolean
+
+
+    @ApiProperty({example:'false/true', description:'первый ли вход после активации емейла?'})
+    @Column({type: DataType.STRING, defaultValue:false})
+    isFirstTimeAfterActivation: boolean
+
+
     @BelongsToMany(()=>Role, ()=>UserRole)
     roles: Role[]
 

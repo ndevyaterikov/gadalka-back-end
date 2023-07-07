@@ -50,6 +50,11 @@ export class UsersService {
         return user
     }
 
+    async getUserByActivationLink(activationLink:string){
+        const user = await this.userRepository.findOne({where:{activationLink:activationLink}})
+        return user
+    }
+
     async getUserByName(userName:string){
         const user = await this.userRepository.findOne({where:{userName:userName}, include:{all:true}})
         return user
@@ -63,6 +68,7 @@ export class UsersService {
         const hash = await this.hashData(rt)
         await this.userRepository.update({hashedRt:hash}, {where:{id:userId}})
     }
+
 
     async addRole(dto:AddRoleDto){
         const user = await this.userRepository.findByPk(dto.userId)
@@ -172,4 +178,13 @@ export class UsersService {
     }
 
 
+    async changeIsFirstTimeAfterActivation(userId: number) {
+        const user = await this.getUserById(userId)
+        if(!user){
+            throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND)
+        }
+        user.isFirstTimeAfterActivation=false
+        await user.save()
+        return {isFirstTimeAfterActivation:false}
+    }
 }
