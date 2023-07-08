@@ -154,13 +154,12 @@ export class AuthService {
 
         const user = await this.userService.getUserByActivationLink(value)
         if(!user){
-            res.redirect(`${process.env.FRONT_URL}/registration`)
+            res.redirect(`${process.env.FRONT_URL}/random`)
            }else {
+            if(user.isEmailActivated===false)this.coinsService.transaction({ userId: user.id, transaction:30,cause:'активация email'})
             user.isEmailActivated = true
             user.isFirstTimeAfterActivation = true
-            this.coinsService.transaction({ userId: user.id, transaction:30,cause:'активация email'})
             await user.save()
-            console.log('saved')
             res.redirect(`${process.env.FRONT_URL}/`)
         }
     }
