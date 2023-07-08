@@ -290,12 +290,12 @@ export class GatewayService {
 
         if(witch){
             try {
-                const giftTransaction = await this.coinsService.transaction({userId:param.userId, transaction:-50, cause:'Гадание у:'+ witch.userName})
+                const giftTransaction = await this.coinsService.transaction({userId:param.userId, transaction:-30, cause:'Гадание у:'+ witch.userName})
                 const user = await this.userService.getUserById(param.userId)
                 if (giftTransaction&&user)
                 {
-                    const recivedtransaction = await this.coinsService.transaction({userId:param.witchId, transaction:50, cause:'Оплата за гадание '+user.userName})
-                    if (!recivedtransaction)await this.coinsService.transaction({userId:param.userId, transaction:-50, cause:'Returned'})
+                    const recivedtransaction = await this.coinsService.transaction({userId:param.witchId, transaction:30, cause:'Оплата за гадание '+user.userName})
+                    if (!recivedtransaction)await this.coinsService.transaction({userId:param.userId, transaction:-30, cause:'Returned'})
 
                     await this.messagesService.createMessage(
                         {
