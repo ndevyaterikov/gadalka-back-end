@@ -172,5 +172,4 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     ){
         this.gateWayService.requestLineForGadaniye(dto.witchId, userId)
     }
-
 }
