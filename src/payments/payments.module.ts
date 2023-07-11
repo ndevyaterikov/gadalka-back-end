@@ -6,10 +6,11 @@ import {Coins} from "../coins/coins.model";
 import {PaymentsController} from "./payments.controller";
 import {PaymentsService} from "./payments.service";
 import {Payments} from "./payments.model";
+import {CoinsModule} from "../coins/coins.module";
 
 @Module({
     controllers: [PaymentsController],
-    imports:[
+    imports:[CoinsModule,
         SequelizeModule.forFeature([User, Coins, Payments]),
     ],
     providers: [PaymentsService],

@@ -6,6 +6,8 @@ import {InjectModel} from "@nestjs/sequelize";
 import {Coins} from "../coins/coins.model";
 import {GatewayService} from "../gateway/gateway.service";
 import {Payments} from "./payments.model";
+import {CoinsService} from "../coins/coins.service";
+import {CoinsTransactionDto} from "../coins/dto/coins-transaction-dto";
 
 @Injectable()
 export class PaymentsService {
@@ -13,7 +15,7 @@ export class PaymentsService {
     constructor(
 
         @InjectModel(Payments) private paymentsRepository: typeof Payments,
-
+        private coinsService: CoinsService
     ){}
 
     async createPayment(createPaymentDto: CreatePaymentDto,  res, userId) {
@@ -76,6 +78,7 @@ export class PaymentsService {
                     case 'succeeded': {
                         payment.status='succeeded'
                         await payment.save()
+                        await this.recordCoinsTransaction(payment.userId, payment.paymentId,payment.description)
                     }
                         break
 
@@ -95,5 +98,28 @@ export class PaymentsService {
         }
         return HttpStatus.OK
 
+    }
+
+    private async recordCoinsTransaction(userId:number, paymentId:string, description:string) {
+        let transaction:number
+        switch (description){
+            case '10Coins':
+                transaction=10
+                break
+            case '20Coins':
+                transaction=20
+                break
+            case '50Coins':
+                transaction=50
+                break
+            case '200Coins':
+                transaction=200
+                break
+            default:
+                break
+        }
+
+        const dto = new CoinsTransactionDto(userId, transaction, paymentId)
+        await this.coinsService.transaction(dto)
     }
 }
