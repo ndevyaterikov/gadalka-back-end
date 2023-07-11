@@ -165,6 +165,7 @@ export class MyGateWay implements OnModuleInit, OnGatewayDisconnect{
     }
 
     @UseGuards(WsAtGuard)
+    @UseFilters(new AllWSExceptionsFilter())
     @SubscribeMessage('requestLineForGadaniye')
     requestLineForGadaniye(
         @WsGetCurrentUserId() userId:number,
