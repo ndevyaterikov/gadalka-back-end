@@ -59,7 +59,7 @@ export class GatewayService {
 
 
 
-    onUserDisconnect(client:Socket, server:Server){
+    async onUserDisconnect(client:Socket, server:Server){
 
         const socketLeft =this.webSockets.filter(w=>w.socket===client)[0]
         this.webSockets = this.webSockets.filter(w=>w.socket!==client)
@@ -68,6 +68,17 @@ export class GatewayService {
         this.webSockets.forEach(w=>{
             if(w.roomId === socketLeft.roomId){viewers++}
         })
+
+        const user = await this.userService.getUserById(socketLeft.userId)
+
+        if (user){
+            let isWitch:boolean
+            if(user.roles.find(role=>role.value==='WITCH')){isWitch=true}else {isWitch=false}
+                if (isWitch){
+                    await this.witchService.setOnLineWitchStatus({witchId:socketLeft.userId,isOnLine: false})
+                }else (console.log('not Witch'))
+        }
+
 
 
         server.to(String(socketLeft.roomId)).emit('user-left-the-room',
