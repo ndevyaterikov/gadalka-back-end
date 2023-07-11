@@ -20,9 +20,10 @@ export class PaymentsController {
     @Post('/create')
     createPayment(
         @Body() createPaymentDto: CreatePaymentDto,
-        @Res() res
+        @Res() res,
+        @GetCurrentUserId() userId: number
     ){
-        return this.paymentService.createPayment(createPaymentDto, res)
+        return this.paymentService.createPayment(createPaymentDto, res, userId)
     }
 
 

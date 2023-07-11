@@ -1,11 +1,22 @@
-import {Injectable, Res} from '@nestjs/common';
+import {forwardRef, Inject, Injectable, Res} from '@nestjs/common';
 import {CreatePaymentDto} from "./dto/create-payment-dto";
 import {v4} from "uuid"
 import { YooCheckout, ICreatePayment  } from '@a2seven/yoo-checkout';
+import {InjectModel} from "@nestjs/sequelize";
+import {Coins} from "../coins/coins.model";
+import {GatewayService} from "../gateway/gateway.service";
+import {Payments} from "./payments.model";
 
 @Injectable()
 export class PaymentsService {
-    async createPayment(createPaymentDto: CreatePaymentDto,  res) {
+
+    constructor(
+
+        @InjectModel(Payments) private paymentsRepository: typeof Payments,
+
+    ){}
+
+    async createPayment(createPaymentDto: CreatePaymentDto,  res, userId) {
         const checkout = new YooCheckout({ shopId: '229784', secretKey: 'test_D12k7Ewb4TPrYV01HXfWcZvItPwxI3sQS2e10PEjadI'});
         const idempotenceKey = v4();
 
@@ -26,8 +37,20 @@ export class PaymentsService {
         try {
             const payment = await checkout.createPayment(createPayload, idempotenceKey);
             console.log(payment)
-            res.redirect(payment.confirmation.confirmation_url)
 
+            await this.paymentsRepository.create(
+                {
+                    paymentId: payment.id,
+                    userId:userId,
+                    status: payment.status,
+                    amount: payment.amount.value,
+                    currency: payment.amount.currency,
+                    description: payment.description,
+                    recipient_account_id:payment.recipient.account_id,
+                    recipient_gateway_id:payment.recipient.gateway_id
+                })
+
+            res.redirect(payment.confirmation.confirmation_url)
         } catch (error) {
             console.log('in error')
             console.error(error);
@@ -38,6 +61,26 @@ export class PaymentsService {
     async updatePayment(updateObject) {
         console.log('updateObject: ')
         console.log(updateObject)
-        return(updateObject)
+
+        console.log('updateObject.object.status: ')
+        console.log(updateObject.object.status)
+
+        const payment = await this.paymentsRepository.findOne({where:{paymentId:updateObject.paymentId}})
+
+        if (payment){
+            if (payment.status==='succeeded'){
+                console.log('already succeeded')
+            }else {
+                console.log('in succeeded')
+                payment.status ='succeeded'
+                await payment.save()
+            }
+        }
+
+        if (updateObject.object.status==='succeeded'){
+
+        }
+
+
     }
 }

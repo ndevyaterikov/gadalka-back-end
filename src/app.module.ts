@@ -34,6 +34,8 @@ import { MailService } from './mail/mail.service';
 import { MailModule } from './mail/mail.module';
 import { PaymentsService } from './payments/payments.service';
 import { PaymentsController } from './payments/payments.controller';
+import { PaymentsModule } from './payments/payments.module';
+import {Payments} from "./payments/payments.model";
 
 @Module({
   imports: [
@@ -54,7 +56,7 @@ import { PaymentsController } from './payments/payments.controller';
           database: process.env.POSTGRES_DB,
           models: [User777, User, Role,
               UserRole, Post, Diamonds,
-              Coins, Witch, Message, WitchTasks],
+              Coins, Witch, Message, WitchTasks, Payments],
           autoLoadModels:true,
           synchronize: true,
         }),
@@ -72,6 +74,7 @@ import { PaymentsController } from './payments/payments.controller';
     TestwsModule,
     WitchTasksModule,
     MailModule,
+    PaymentsModule,
   ],
   controllers: [PaymentsController],
   providers: [
@@ -80,7 +83,6 @@ import { PaymentsController } from './payments/payments.controller';
           useClass: AtGuard,
       },
       MailService,
-      PaymentsService
   ],
 })
 export class AppModule {}

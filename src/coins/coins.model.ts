@@ -43,8 +43,6 @@ export class Coins extends Model<Coins, CoinsCreationAttrs> {
     @BeforeUpdate
     @BeforeCreate
     static afterUpdateCoins(instance:Coins) {
-
-
         console.log('Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_Coins_updated_')
         console.log('Измеfнение монет на '+instance.transaction + ' у пользователя '
             + instance.userId + ' причина ' + instance.cause)
