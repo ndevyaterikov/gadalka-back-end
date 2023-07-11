@@ -32,6 +32,8 @@ import { WitchTasksModule } from './witch-tasks/witch-tasks.module';
 import {WitchTasks} from "./witch-tasks/witch-tasks.model";
 import { MailService } from './mail/mail.service';
 import { MailModule } from './mail/mail.module';
+import { PaymentsService } from './payments/payments.service';
+import { PaymentsController } from './payments/payments.controller';
 
 @Module({
   imports: [
@@ -71,13 +73,14 @@ import { MailModule } from './mail/mail.module';
     WitchTasksModule,
     MailModule,
   ],
-  controllers: [],
+  controllers: [PaymentsController],
   providers: [
       {
           provide: APP_GUARD,
           useClass: AtGuard,
       },
-      MailService
+      MailService,
+      PaymentsService
   ],
 })
 export class AppModule {}
