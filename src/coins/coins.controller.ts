@@ -14,11 +14,13 @@ import {Coins} from "./coins.model";
 import {IncomingCoinsDto} from "./dto/incoming-coins-dto";
 import {CoinsTransactionDto} from "./dto/coins-transaction-dto";
 import {CoinsHistoryDto} from "./dto/coins-history-dto";
+import {BuyCoinsDto} from "./dto/buy-coins-dto";
 
 @Controller('coins')
 export class CoinsController {
 
-    constructor(private coinsService: CoinsService) {
+    constructor(
+        private coinsService: CoinsService) {
     }
 
     @ApiOperation({summary:'Транзакция монет'})
@@ -32,6 +34,21 @@ export class CoinsController {
         const dto = new CoinsTransactionDto(userId, incoming_dto.transaction, incoming_dto.cause)
         return this.coinsService.transaction(dto)
     }
+
+
+
+    @ApiOperation({summary:'Покупка монет'})
+    @ApiResponse({status:200, type:Coins})
+    @UsePipes(ValidationPipe)
+    @Post('/buyCoins')
+    buyCoins(
+        @Body() dto: BuyCoinsDto,
+        @GetCurrentUserId() userId: number
+    ){
+      return this.coinsService.buyCoins(dto.description, userId)
+    }
+
+
 
 
     @ApiOperation({summary:'Получить историю транзакций монет'})

@@ -11,6 +11,7 @@ import {MessagesService} from "../messages/messages.service";
 import {TestwsService} from "../testws/testws.service";
 
 
+
 @Injectable()
 export class CoinsService {
 
@@ -144,5 +145,9 @@ export class CoinsService {
         return {
             coins_count: coins_on_acaunt
         }
+    }
+
+    async buyCoins(description: string, userId: number) {
+
     }
 }

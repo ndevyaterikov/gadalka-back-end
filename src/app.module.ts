@@ -36,6 +36,9 @@ import { PaymentsService } from './payments/payments.service';
 import { PaymentsController } from './payments/payments.controller';
 import { PaymentsModule } from './payments/payments.module';
 import {Payments} from "./payments/payments.model";
+import { PriceService } from './price/price.service';
+import { PriceModule } from './price/price.module';
+import {Price} from "./price/price.model";
 
 @Module({
   imports: [
@@ -56,7 +59,7 @@ import {Payments} from "./payments/payments.model";
           database: process.env.POSTGRES_DB,
           models: [User777, User, Role,
               UserRole, Post, Diamonds,
-              Coins, Witch, Message, WitchTasks, Payments],
+              Coins, Witch, Message, WitchTasks, Payments, Price],
           autoLoadModels:true,
           synchronize: true,
         }),
@@ -75,6 +78,7 @@ import {Payments} from "./payments/payments.model";
     WitchTasksModule,
     MailModule,
     PaymentsModule,
+    PriceModule,
   ],
   controllers: [PaymentsController],
   providers: [
