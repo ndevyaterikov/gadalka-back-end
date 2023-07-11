@@ -65,7 +65,7 @@ export class PaymentsService {
         console.log('updateObject.object.status: ')
         console.log(updateObject.object.status)
 
-        const payment = await this.paymentsRepository.findOne({where:{paymentId:updateObject.paymentId}})
+        const payment = await this.paymentsRepository.findOne({where:{paymentId:updateObject.object.id}})
 
         if (payment){
             if (payment.status==='succeeded'){
