@@ -71,14 +71,24 @@ export class PaymentsService {
 
 
         if (payment){
-            if (payment.status==='succeeded'){
-                console.log('already succeeded')
-            }else {
-                console.log('in succeeded')
+            if (payment.status==='pending'){
+                switch(updateObject.object.status) {
+                    case 'succeeded': {
+                        payment.status='succeeded'
+                        await payment.save()
+                    }
+                        break
 
-                if (updateObject.object.status)
-                payment.status ='succeeded'
-                await payment.save()
+                    case 'canceled': {
+                        payment.status='canceled'
+                        await payment.save()
+                    }
+                        break
+
+                    default:
+                        break
+                }
+
             }
         }
 
