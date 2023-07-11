@@ -38,5 +38,6 @@ export class PaymentsService {
     async updatePayment(updateObject) {
         console.log('updateObject: ')
         console.log(updateObject)
+        return(updateObject)
     }
 }
