@@ -1,4 +1,4 @@
-import {Body, Controller, Ip, Post, Res, UsePipes} from '@nestjs/common';
+import {Body, Controller, HttpCode, Ip, Post, Res, UsePipes} from '@nestjs/common';
 import {MessagesService} from "../messages/messages.service";
 import {ApiOperation, ApiResponse} from "@nestjs/swagger";
 import {ValidationPipe} from "../pipes/validation.pipe";
@@ -29,7 +29,8 @@ export class PaymentsController {
 
     @Public()
     @ApiOperation({summary:'Апдейты статуса платежа от ЮКасса'})
-    @Post('/uptates')
+    @HttpCode(200)
+    @Post('/updates')
     updatePayment(
         @Body() updateObject,
         @Ip() ip
