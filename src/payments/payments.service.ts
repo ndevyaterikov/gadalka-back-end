@@ -1,4 +1,4 @@
-import {forwardRef, Inject, Injectable, Res} from '@nestjs/common';
+import {forwardRef, HttpStatus, Inject, Injectable, Res} from '@nestjs/common';
 import {CreatePaymentDto} from "./dto/create-payment-dto";
 import {v4} from "uuid"
 import { YooCheckout, ICreatePayment  } from '@a2seven/yoo-checkout';
@@ -30,8 +30,9 @@ export class PaymentsService {
                 type: 'redirect',
                 return_url: 'http://localhost:3000/'
             },
+            capture:true,
+            description:createPaymentDto.description,
 
-            description:createPaymentDto.description
         };
 
         try {
@@ -58,7 +59,10 @@ export class PaymentsService {
 
     }
 
-    async updatePayment(updateObject) {
+    async updatePayment(updateObject, ip) {
+        console.log('request from ip: ')
+        console.log(ip)
+
         console.log('updateObject: ')
         console.log(updateObject)
 
@@ -81,6 +85,7 @@ export class PaymentsService {
 
         }
 
+        return HttpStatus.OK
 
     }
 }

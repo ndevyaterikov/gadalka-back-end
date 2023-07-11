@@ -1,4 +1,4 @@
-import {Body, Controller, Post, Res, UsePipes} from '@nestjs/common';
+import {Body, Controller, Ip, Post, Res, UsePipes} from '@nestjs/common';
 import {MessagesService} from "../messages/messages.service";
 import {ApiOperation, ApiResponse} from "@nestjs/swagger";
 import {ValidationPipe} from "../pipes/validation.pipe";
@@ -32,9 +32,10 @@ export class PaymentsController {
     @Post('/uptates')
     updatePayment(
         @Body() updateObject,
+        @Ip() ip
     ){
         console.log('in updates')
-        return this.paymentService.updatePayment(updateObject)
+        return this.paymentService.updatePayment(updateObject,ip)
     }
 
 
