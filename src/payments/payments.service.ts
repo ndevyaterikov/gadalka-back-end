@@ -66,25 +66,23 @@ export class PaymentsService {
         console.log('updateObject: ')
         console.log(updateObject)
 
-        console.log('updateObject.object.status: ')
-        console.log(updateObject.object.status)
+        if(typeof updateObject.object!=='undefined'){
+            const payment = await this.paymentsRepository.findOne({where:{paymentId:updateObject.object.id}})
 
-        const payment = await this.paymentsRepository.findOne({where:{paymentId:updateObject.object.id}})
 
         if (payment){
             if (payment.status==='succeeded'){
                 console.log('already succeeded')
             }else {
                 console.log('in succeeded')
+
+                if (updateObject.object.status)
                 payment.status ='succeeded'
                 await payment.save()
             }
         }
 
-        if (updateObject.object.status==='succeeded'){
-
         }
-
         return HttpStatus.OK
 
     }
