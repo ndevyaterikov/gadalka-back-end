@@ -20,10 +20,9 @@ export class PaymentsController {
     @Post('/create')
     createPayment(
         @Body() createPaymentDto: CreatePaymentDto,
-        @Res() res,
         @GetCurrentUserId() userId: number
     ){
-        return this.paymentService.createPayment(createPaymentDto, res, userId)
+        return this.paymentService.createPayment(createPaymentDto, userId)
     }
 
 
@@ -32,11 +31,10 @@ export class PaymentsController {
     @HttpCode(200)
     @Post('/updates')
     updatePayment(
-        @Body() updateObject,
-        @Ip() ip
+        @Body() updateObject
     ){
         console.log('in updates')
-        return this.paymentService.updatePayment(updateObject,ip)
+        return this.paymentService.updatePayment(updateObject)
     }
 
 

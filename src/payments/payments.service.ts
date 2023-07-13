@@ -20,7 +20,7 @@ export class PaymentsService {
         private priceService: PriceService
     ){}
 
-    async createPayment(createPaymentDto: CreatePaymentDto,  res, userId) {
+    async createPayment(createPaymentDto: CreatePaymentDto, userId) {
         const checkout = new YooCheckout({ shopId: '229784', secretKey: 'test_D12k7Ewb4TPrYV01HXfWcZvItPwxI3sQS2e10PEjadI'});
         const idempotenceKey = v4();
 
@@ -32,7 +32,7 @@ export class PaymentsService {
 
             confirmation: {
                 type: 'redirect',
-                return_url: 'http://localhost:3000/'
+                return_url: `${process.env.FRONT_URL}`
             },
             capture:true,
             description:createPaymentDto.description,
@@ -42,6 +42,7 @@ export class PaymentsService {
         try {
             const payment = await checkout.createPayment(createPayload, idempotenceKey);
             console.log(payment)
+            console.log(payment.confirmation.confirmation_url)
 
             await this.paymentsRepository.create(
                 {
@@ -55,7 +56,9 @@ export class PaymentsService {
                     recipient_gateway_id:payment.recipient.gateway_id
                 })
 
-            res.redirect(payment.confirmation.confirmation_url)
+            return payment.confirmation.confirmation_url
+
+
         } catch (error) {
             console.log('in error')
             console.error(error);
@@ -63,12 +66,7 @@ export class PaymentsService {
 
     }
 
-    async updatePayment(updateObject, ip) {
-        console.log('request from ip: ')
-        console.log(ip)
-
-        console.log('updateObject: ')
-        console.log(updateObject)
+    async updatePayment(updateObject) {
 
         if(typeof updateObject.object!=='undefined'){
             const payment = await this.paymentsRepository.findOne({where:{paymentId:updateObject.object.id}})
@@ -106,8 +104,6 @@ export class PaymentsService {
 
         const price = await this.priceService.getAllPriceLines()
         const transaction = price.find(f=>f.description===description).coins_count
-
-
         const dto = new CoinsTransactionDto(userId, transaction, 'Номер платежа в ЮКасса: '+paymentId)
         await this.coinsService.transaction(dto)
     }
